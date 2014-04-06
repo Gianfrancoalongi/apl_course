@@ -1,7 +1,19 @@
-* APL by example | An inductive course for the curious
+* APL by example, an inductive course for the curious hacker.
+
+The target audience for this course, is anyone who is fearless.
+You will be immediately thrown into Dyalog APL with expressions you can
+enter yourself in the Dyalog APL session.
+While we walk through several short and sweet example programs, I will hold
+your hand along the way - telling you what I think and trying to answer the
+questions I would imagine you had, if you where sitting next to me right now,
+as I type this.
 
 You can find the online help on help.dyalog.com. This page is most valuable,
 and we will use it to look up things we don't remember or don't know.
+
+I can not guarantee anything, but I will do my best to give you an extensive
+tour of Dyalog APL while pointing out particularly intersting things as we 
+come across them.
 
 * The Caesar cipher - implementing and breaking
 The Caesar cipher is a simple substitution cipher where the cipher is the result
@@ -473,7 +485,7 @@ Lets start by creating our cleartext.
 #+BEGIN_EXAMPLE
    text ← ⊂'thefirstincarnationofwhatwaslatertobetheaplprogramminglanguagewaspublishedand'
    text,← ⊂'formalizedinaprogramminglanguageabookdescribinganotationinventedbykennetheiverson'
-   text,← ⊂'whileatHarvarduniversityiversonhaddevelopedamathematicalnotationformanipulating'
+   text,← ⊂'whileatharvarduniversityiversonhaddevelopedamathematicalnotationformanipulating'
    text,← ⊂'arraysthathetaughttohisstudentsiversondescribedthepremiseofthebookinthepreface'
    text,← ⊂'appliedmathematicsislargelyconcernedwiththedesignandanalysisofexplicitprocedures'
    text,← ⊂'forcalculatingtheexactorapproximatevaluesofvariousfunctionssuchexplicitprocedures'
@@ -677,4 +689,143 @@ The full listing for this frequency breaking are shown below.
 ∇ rotate←{⍵⌽alfabet}
 ∇ indices_in_alfabet←{alfabet⍳⍵}
 #+END_EXAMPLE
+
+* The Vigenere cipher - implementing and breaking
+
+The Vigenere cipher is a polyalfabetic cipher which was considered to be 
+unbreakable for a long time. At the core, it works by performing several
+independent caesar cipher encodings on the given text to produce the 
+cipher text. A gentleman called Friedrich Kasiski published a paper on how to attack
+the Vigenere Cipher, by first finding the possible key length. Once the possible
+key length was found, the cipher could be attacked in much the same way as
+the frequency attack on a plain caesar cipher.
+
+Let's start our journey by implementing the Vigenere cipher.
+
+** Implementation
+
+The original Vigenere cipher utilized a keyword instead of a numeric key.
+Let's take the key DYALOGAPL as an example. Next, a Vigenere table is created.
+The Vigenere table is a table of all 26 possible rotations of the alfabet.
+
+#+BEGIN_EXAMPLE
+     key←'dyalogapl'
+     alfabet←⎕UCS 96+⍳26
+     table←↑(¯1+⍳26) ∘.⌽ ⊂alfabet
+     table
+abcdefghijklmnopqrstuvwxyz
+bcdefghijklmnopqrstuvwxyza
+cdefghijklmnopqrstuvwxyzab
+defghijklmnopqrstuvwxyzabc
+efghijklmnopqrstuvwxyzabcd
+fghijklmnopqrstuvwxyzabcde
+ghijklmnopqrstuvwxyzabcdef
+hijklmnopqrstuvwxyzabcdefg
+ijklmnopqrstuvwxyzabcdefgh
+jklmnopqrstuvwxyzabcdefghi
+klmnopqrstuvwxyzabcdefghij
+lmnopqrstuvwxyzabcdefghijk
+mnopqrstuvwxyzabcdefghijkl
+nopqrstuvwxyzabcdefghijklm
+opqrstuvwxyzabcdefghijklmn
+pqrstuvwxyzabcdefghijklmno
+qrstuvwxyzabcdefghijklmnop
+rstuvwxyzabcdefghijklmnopq
+stuvwxyzabcdefghijklmnopqr
+tuvwxyzabcdefghijklmnopqrs
+uvwxyzabcdefghijklmnopqrst
+vwxyzabcdefghijklmnopqrstu
+wxyzabcdefghijklmnopqrstuv
+xyzabcdefghijklmnopqrstuvw
+yzabcdefghijklmnopqrstuvwx
+zabcdefghijklmnopqrstuvwxy
+#+END_EXAMPLE
+
+Using the keyword, and the vigenere table, the keyword is written under
+the cleartext, repeating it as many times as necessary.
+We can do this in two steps, first we generate a repetition of the keyword
+which repeats as long as needed to fill up to the length of the cleartext.
+
+#+BEGIN_EXAMPLE
+      (⍴ ⊃,/text) ⍴ key
+dyalogapldyalogapldyalogapldyalogapldyalogapld....(lots of text)
+#+END_EXAMPLE
+
+we can now laminate this below the cleartext, so you can see how this aligns.
+
+#+BEGIN_EXAMPLE
+      (⊃,/text),[0.5](⍴ ⊃,/text) ⍴ key
+thefirstincarnationofwhatwaslatertobetheaplprogramminglanguage....(lots of text)
+dyalogapldyalogapldyalogapldyalogapldyalogapldyalogapldyalogap....(lots of text)
+#+END_EXAMPLE
+
+for every character in the clear text, take the corresponding letter below it
+from the repetition, and find the corresponding row in the vigenere table starting
+with the same letter; replace the first letter as if doing a caesar rotation with 
+the selected row. 
+We start by transposing the laminated text with 'transpose' ⍉ and then break the rectangular matrix down 
+into pairs of letters with 'split' ↓.
+
+#+BEGIN_EXAMPLE
+      ↓ ⍉ (⊃,/text),[0.5](⍴ ⊃,/text) ⍴ key
+ td  hy  ea  fl  io  rg  sa  tp  il  nd  cy  aa  rl  no  ag  ta  ip ....(lots of text)
+#+END_EXAMPLE
+
+what we want to do now, is to find the row in the vigenere table by means of the second
+letter in each pair. This is achieved by finding the index of the second letter in the
+first column of the vigenere table. This is done for all pairs.
+
+#+BEGIN_EXAMPLE
+      { table[;1] ⍳ ⍵[2]} ¨ ↓ ⍉ (⊃,/text),[0.5](⍴ ⊃,/text) ⍴ key
+4 25 1 12 15 7 1 16 12 4 25 1 12 15 7 1 16 12 4 25 1 12 ... (lots of numbers)
+#+END_EXAMPLE
+
+the number is then used to select the full row from the table, finding the index of the
+first letter in the pair within the normal alfabet and indexing the selected row with 
+this index.
+
+#+BEGIN_EXAMPLE
+      cipher ← { c←alfabet⍳⍵[1] ⋄ r←table[;1]⍳⍵[2] ⋄ table[r;c]} ¨ ↓ ⍉ (⊃,/text),[0.5](⍴ ⊃,/text) ⍴ key
+      cipher
+wfeqwxsitqaacbgtxzqmfhvgtllvjaesxtdmhrhpovlecrerlasicroynr....(lots of text)
+#+END_EXAMPLE
+
+This is the Vigenere encryption algorithm.
+
+#+BEGIN_EXAMPLE
+      vigenere_encrypt ← { { c←alfabet⍳⍵[1] ⋄ r←table[;1]⍳⍵[2] ⋄ table[r;c]} ¨ ↓ ⍉ ⍵,[0.5](⍴ ⍵) ⍴ ⍺ }
+      cipher ← 'dyalogapl' vigenere_encrypt ⊃,/text
+      cipher
+wfeqwxsitqaacbgtxzqmfhvgtllvjaesxtdmhrhpovlecrerlasicroynr...(lots of text)
+#+END_EXAMPLE
+
+decryption of a cipher is done by using the cipher text position in the selected row as
+index for the normal alfabet.
+
+#+BEGIN_EXAMPLE
+      vigenere_decrypt ← { { r←table[;1]⍳⍵[2] ⋄ c←table[r;]⍳⍵[1] ⋄ alfabet[c] } ¨ ↓ ⍉ ⍵,[0.5](⍴ ⍵) ⍴ ⍺ }
+      cleartext ← 'dyalogapl' vigenere_decrypt cipher
+      cleartext
+thefirstincarnationofwhatwaslatertobetheapl.....(lots of text)
+#+END_EXAMPLE
+
+To ensure that this is working properly, we should be able to encrypt and decrypt with the same key
+and get the same result back.
+
+#+BEGIN_EXAMPLE
+      key←'monadicapplication'
+      text←'onceuponatimetherelivedanoldladybythefootofthemountainandthebigforestoutsidewasdarkandcold'
+      cipher←key vigenere_encrypt text
+      cleartext←key vigenere_decrypt cipher
+      text  ≡ cleartext
+1
+#+END_EXAMPLE
+
+
+
+
+
+
+
+
 
