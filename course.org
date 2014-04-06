@@ -1,0 +1,680 @@
+* APL by example | An inductive course for the curious
+
+You can find the online help on help.dyalog.com. This page is most valuable,
+and we will use it to look up things we don't remember or don't know.
+
+* The Caesar cipher - implementing and breaking
+The Caesar cipher is a simple substitution cipher where the cipher is the result
+of rotating the alphabet and re-encoding. The encryption key is the corresponding
+rotation necessary. Confused? Don't be! Here are some examples.
+
+#+BEGIN_EXAMPLE
+     0 caesar 'abba' 
+abba
+    
+     1 caesar 'abba'
+bccb
+
+     2 caesar 'abba'
+cddc
+#+END_EXAMPLE
+
+** Implementation
+
+The encryption algorithm is quite simple
+
+#+BEGIN_EXAMPLE
+  1. Rotate the encoding alfabet N steps : N is the encryption key 
+  2. For every character C in the input text
+     2.1 Let I be the index of C in the normal alfabet
+     2.2 Encode C with the character found at index I 
+         from the rotated encoding alfabet
+#+END_EXAMPLE
+
+Lets start of with the rotation of the alfabet, first we need an alfabet to work on.
+We make this simple and assume that only alphabetic characters can be used. 
+Let's define the alfabet, this can be done in two ways, I will show both ways here. 
+First we can do it by assigning the whole alfabet in a string.
+
+#+BEGIN_EXAMPLE
+      alfabet←'abcdefghijklmnopqrstuvwxyz'
+      alfabet
+abcdefghijklmnopqrstuvwxyz
+#+END_EXAMPLE
+
+the other way is to use the Unicode Convert system function ⎕UCS. It suffices to say
+that it can encode the ASCII number to the appropriate alfabetic character. 
+Since the alfabet in this case consists of 26 characters, we generate 26 numbers.
+
+#+BEGIN_EXAMPLE
+      ⍳26
+1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26
+#+END_EXAMPLE
+
+next, we know that lowercase 'a' is on 97, so we shift this sequence by 96.
+
+#+BEGIN_EXAMPLE
+      96 + ⍳26
+97 98 99 100 101 102 103 104 105 106 107 108 109 110 111 112 113 114 115 116 117 118 119 120 121 122
+#+END_EXAMPLE
+
+using ⎕UCS we can now get the full alfabet we want
+
+#+BEGIN_EXAMPLE
+      alfabet←⎕UCS 96 + ⍳26
+      alfabet
+abcdefghijklmnopqrstuvwxyz
+#+END_EXAMPLE
+
+Now we want to be able to rotate the alfabet with an encryption key (a number).
+This is easily done with the 'circle stile' (rotate) ⌽.
+
+#+BEGIN_EXAMPLE
+      rotate←{ ⍵ ⌽ alfabet }
+      rotate
+ ∇rotate
+#+END_EXAMPLE
+
+Now, try invoking the dynamic function (d-fn) rotate which we just defined.
+
+#+BEGIN_EXAMPLE
+      rotate 0
+abcdefghijklmnopqrstuvwxyz
+      rotate 1
+bcdefghijklmnopqrstuvwxyza
+      rotate 2
+cdefghijklmnopqrstuvwxyzab
+#+END_EXAMPLE
+
+What remains is to find the index of the letters in the input text.
+This is also very simple, thanks to Dyalog APL. 
+We use 'iota' ⍳ for this, in 'dyadic' form (two arguments, one to the left
+and one to the right). 
+
+#+BEGIN_EXAMPLE
+     indices_in_alfabet ←{ alfabet ⍳ ⍵ }
+     indices_in_alfabet 'abbacus'
+1 2 2 1 3 21 19
+#+END_EXAMPLE
+
+Using these indices, we would now like to select letters from the rotated
+alfabet. This is actually encoding the message using the encryption key. 
+
+#+BEGIN_EXAMPLE
+      caesar ←  { rotated←(rotate ⍺),' ' ⋄ rotated[indices_in_alfabet ⍵]}
+#+END_EXAMPLE
+
+'diamond' ⋄ is just a newline indicator which used when writing oneliners
+in the Dyalog APL environment. The code above is semantically equivalent 
+to
+
+#+BEGIN_EXAMPLE
+      caesar ←  { rotated←(rotate ⍺),' '
+                  rotated[indices_in_alfabet ⍵]
+                }
+#+END_EXAMPLE
+
+the first line means that we assign the rotated alfabet with the space character
+at the end. This because we want to be able to encode spaces as well.
+When inquiring for the indices, the space character will not be part of the normal
+alfabet, and so a number which is 1 higher than the length of the normal alfabet 
+will be returned.
+
+#+BEGIN_EXAMPLE
+      alfabet  ⍳ ' a '
+27 1 27
+#+END_EXAMPLE
+
+thus, adding the space at the end of the rotated alfabet, ensures that we take
+care of encoding spaces as well. 
+we can now try some examples
+
+#+BEGIN_EXAMPLE
+      0 caesar 'attack at dawn when the enemy soldiers are still sleeping'
+attack at dawn when the enemy soldiers are still sleeping
+      1 caesar 'attack at dawn when the enemy soldiers are still sleeping'
+buubdl bu ebxo xifo uif fofnz tpmejfst bsf tujmm tmffqjoh
+      2 caesar 'attack at dawn when the enemy soldiers are still sleeping'
+cvvcem cv fcyp yjgp vjg gpgoa uqnfkgtu ctg uvknn unggrkpi
+#+END_EXAMPLE
+
+So, how do we decipher a caesar cipher if we know the key?
+Simple, we just apply the negative rotation.
+
+#+BEGIN_EXAMPLE
+      clear_text←'attack at dawn when the enemy soldiers are still sleeping'
+      key←12
+      cipher← key caesar clear_text
+      cipher
+mffmow mf pmiz itqz ftq qzqyk eaxpuqde mdq efuxx exqqbuzs
+      (¯1×key) caesar cipher
+attack at dawn when the enemy soldiers are still sleeping
+#+END_EXAMPLE
+
+** Breaking the caesar cipher with a lookup attack
+
+The caesar ciphers we can produce now are vulnerable to brute force
+attacks, where the attacker will try all 26 possible counter rotations 
+and looking up results in a dictionary. The lookup attack algorithm is quite simple.
+
+#+BEGIN_EXAMPLE
+ 1. Try all 26 possible counter-rotations
+ 2. For every counter-rotation R_i
+    2.1 check how many words from the possibly decrypted text can be
+        found in a dictionary, this is the score S_i of R_i.
+ 3. The counter-rotation R_i with the highest score S_i is the most
+    probable key.       
+#+END_EXAMPLE
+
+Let's try doing this ourselves! We start by generating a random key between 1 and 26, 
+we use the roll '?' operator for this.
+
+#+BEGIN_EXAMPLE
+      clear_text←'attack at dawn when the enemy soldiers are still sleeping'
+      key ← ? 26
+      cipher  ←  key caesar clear_text
+      cipher
+dwwdfn dw gdzq zkhq wkh hqhpb vroglhuv duh vwloo vohhslqj
+#+END_EXAMPLE
+
+Now, let's try 26 possible counter-rotations, this is done by generating
+all numbers from ¯26 to ¯1.
+
+#+BEGIN_EXAMPLE
+      (¯1 × ⍳ 26)
+¯1 ¯2 ¯3 ¯4 ¯5 ¯6 ¯7 ¯8 ¯9 ¯10 ¯11 ¯12 ¯13 ¯14 ¯15 ¯16 ¯17 ¯18 ¯19 ¯20 ¯21 ¯22 ¯23 ¯24 ¯25 ¯26
+#+END_EXAMPLE
+
+what we want to do now, is to use the caesar cipher with each and every key,
+on the cipher text. For this, we will do what is called 'outer product' with the
+caesar d-fn (∘.caesar). This is just distributing the left arguments over the function 
+and the right argument.
+
+#+BEGIN_EXAMPLE
+      (¯1 × ⍳ 26) ∘.caesar ⊂cipher
+ ....this is a lot of text
+#+END_EXAMPLE
+
+We had to 'enclose' ⊂ the right argument to turn it into a scalar for the outer product
+to work properly, this is a detail that will be covered more thoroughly later.
+We can make this more readable by creating a rectangular matrix of the result.
+Because we get an array of 26 elements (one caesar-application for every negative key),
+and every element is as long as the cipher text, we can build a 26 by 57 matrix,
+using 'mix' ↑. Let's check that the mental calculation is correct by asking for the dimensions 
+of the result, using 'shape' ⍴.
+
+#+BEGIN_EXAMPLE
+      ⍴ ↑ (¯1 × ⍳ 26) ∘.caesar ⊂cipher
+26 57
+#+END_EXAMPLE
+
+Yep, 26 rows and 57 columns.
+
+#+BEGIN_EXAMPLE
+      ↑ (¯1 × ⍳ 26) ∘.caesar ⊂cipher
+cvvcem cv fcyp yjgp vjg gpgoa uqnfkgtu ctg uvknn unggrkpi
+buubdl bu ebxo xifo uif fofnz tpmejfst bsf tujmm tmffqjoh
+attack at dawn when the enemy soldiers are still sleeping
+zsszbj zs czvm vgdm sgd dmdlx rnkchdqr zqd rshkk rkddohmf
+yrryai yr byul ufcl rfc clckw qmjbgcpq ypc qrgjj qjccngle
+xqqxzh xq axtk tebk qeb bkbjv pliafbop xob pqfii pibbmfkd
+wppwyg wp zwsj sdaj pda ajaiu okhzeano wna opehh ohaalejc
+voovxf vo yvri rczi ocz zizht njgydzmn vmz nodgg ngzzkdib
+unnuwe un xuqh qbyh nby yhygs mifxcylm uly mncff mfyyjcha
+tmmtvd tm wtpg paxg max xgxfr lhewbxkl tkx lmbee lexxibgz
+sllsuc sl vsof ozwf lzw wfweq kgdvawjk sjw kladd kdwwhafy
+rkkrtb rk urne nyve kyv vevdp jfcuzvij riv jkzcc jcvvgzex
+qjjqsa qj tqmd mxud jxu uduco iebtyuhi qhu ijybb ibuufydw
+piiprz pi splc lwtc iwt tctbn hdasxtgh pgt hixaa hattexcv
+ohhoqy oh rokb kvsb hvs sbsam gczrwsfg ofs ghwzz gzssdwbu
+nggnpx ng qnja jura gur rarzl fbyqvref ner fgvyy fyrrcvat
+mffmow mf pmiz itqz ftq qzqyk eaxpuqde mdq efuxx exqqbuzs
+leelnv le olhy hspy esp pypxj dzwotpcd lcp detww dwppatyr
+kddkmu kd nkgx grox dro oxowi cyvnsobc kbo cdsvv cvoozsxq
+jccjlt jc mjfw fqnw cqn nwnvh bxumrnab jan bcruu bunnyrwp
+ibbiks ib liev epmv bpm mvmug awtlqmza izm abqtt atmmxqvo
+haahjr ha khdu dolu aol lultf zvskplyz hyl zapss zsllwpun
+gzzgiq gz jgct cnkt znk ktkse yurjokxy gxk yzorr yrkkvotm
+fyyfhp fy ifbs bmjs ymj jsjrd xtqinjwx fwj xynqq xqjjunsl
+exxego ex hear alir xli iriqc wsphmivw evi wxmpp wpiitmrk
+dwwdfn dw gdzq zkhq wkh hqhpb vroglhuv duh vwloo vohhslqj
+#+END_EXAMPLE
+
+visual inspection shows that the third row from the top is very readable, 
+this would put the randomized key to be 3.
+Let's check.
+
+#+BEGIN_EXAMPLE
+      key
+3
+#+END_EXAMPLE
+
+But what if we want this to be totally automated? If we have many (thousands!) ciphers, 
+we would like the computer to do this for us and avoid having to do visual inspection.
+This is where the lookup part of the attack comes into play.
+Lets start by declaring the dictionary 
+
+#+BEGIN_EXAMPLE
+      dictionary ← 'soldier' 'attack' 'dawn' 'swords' 'blood'
+#+END_EXAMPLE
+
+The dictionary is now an array with 5 elements, each one being a text-array.
+We can once again use 'shape' ⍴ to verify this, or 'tally' ≢.
+
+#+BEGIN_EXAMPLE
+     ⍴ dictionary
+5
+     ≢ dictionary
+5
+#+END_EXAMPLE
+
+Let's now define the lookup function that takes a piece of text, splits it into 
+words and tries to see how many of these words exist in the dictionary.
+First, we need to learn how to split a string into several small strings.
+We can partition an array according to the pattern of a binary mask by using
+'partition' ⊂ from what is called ML 3. An example is in order
+
+#+BEGIN_EXAMPLE
+     ⎕ML←3
+     text  ← 'this is a piece of text with spaces'
+     ' '≠text
+1 1 1 1 0 1 1 0 1 0 1 1 1 1 1 0 1 1 0 1 1 1 1 0 1 1 1 1 0 1 1 1 1 1 1
+     (' '≠text)⊂text
+ this  is  a  piece  of  text  with  spaces
+     ⍴ (' '≠text)⊂text
+8
+#+END_EXAMPLE
+
+so, let's partition and search for hits! We will do this step-wise to introduce
+the necessary concepts. First we want to split the string into substrings.
+We have seen how to do this in ⎕ML ← 3 (quad ML three).
+
+#+BEGIN_EXAMPLE
+   ⎕ML  ← 3
+   text ← 'attack at dawn when the enemy soldiers are still sleeping'
+   words ← (' ' ≠text)⊂text   
+#+END_EXAMPLE
+
+We now want to know many of the words exist in the dictionary. This is done
+by means of outer product with 'match' ≡. This will produce a 10 by 5 matrix.
+
+#+BEGIN_EXAMPLE
+     words ∘.≡ dictionary
+0 1 0 0 0
+0 0 0 0 0
+0 0 1 0 0
+0 0 0 0 0
+0 0 0 0 0
+0 0 0 0 0
+0 0 0 0 0
+0 0 0 0 0
+0 0 0 0 0
+0 0 0 0 0
+#+END_EXAMPLE
+
+Every row of the matrix is one particular word in words, every column is one
+particular entry in the dictionary. The matrix element e_ij is the indications if the
+i:th word matched the j:th entry in the dictionary. To calculate the total 
+match-score of this text, we 'plus reduce' +/ the matrix two times.
+First time we are collapsing it along the first dimension (columns), this yields
+an array of length 10.
+
+#+BEGIN_EXAMPLE
+      +/ words ∘.≡ dictionary
+1 0 1 0 0 0 0 0 0 0
+      ⍴ +/ words ∘.≡ dictionary
+10
+#+END_EXAMPLE
+
+Next we reduce it again, this time we get a scalar result.
+
+#+BEGIN_EXAMPLE
+      +/ +/ words ∘.≡ dictionary
+2
+      ⍴ +/ +/ words ∘.≡ dictionary
+#+END_EXAMPLE
+
+We can see that this is a scalar result since 'shape' reports an empty result.
+This means that there is no dimension on the argument to 'shape' ⍴. Scalars are
+dimension-less in APL.
+
+We now have the recipe for the score calculation, and we can define our d-fn.
+
+#+BEGIN_EXAMPLE
+      score ← { ⎕ML←3 ⋄ words←(' '≠⍵)⊂⍵ ⋄ +/+/words∘.≡dictionary}
+#+END_EXAMPLE
+
+Remember that this is semantically equivalent to the following multi-line definition.
+
+#+BEGIN_EXAMPLE
+      score ← { ⎕ML←3
+                words←(' '≠⍵)⊂⍵
+                +/+/words∘.≡dictionary
+              }
+#+END_EXAMPLE
+
+and we test it with our decrypted text.
+
+#+BEGIN_EXAMPLE
+      score 'attack  at  dawn  when  the  enemy  soldiers  are  still  sleeping'
+2
+#+END_EXAMPLE
+
+we have the rotations, and we have the scores, now we need to apply the rotations,
+and calculate the scores, selecting the rotation with highest score.
+With Dyalog APL - this is simple. Once again, let's do this stepwise in the Dyalog APL 
+environment, and once we have 'found the recipe' we put it into a d-fn.
+
+#+BEGIN_EXAMPLE
+      rotations ← ¯1×⍳26
+      scores ← score ¨ rotations ∘.caesar ⊂cipher
+#+END_EXAMPLE
+ 
+now we want to know which score is the highest ranked one, this can be done by aquiring
+the descending order of indices as they can be used to retrieve the sorted result 
+from an array. The function is called 'grade down' ⍒.
+And once again, and example is in order.
+
+#+BEGIN_EXAMPLE
+      ⍒ 3 1 4 6 2
+4 3 1 5 2
+#+END_EXAMPLE
+
+so, what we want is to 'grade down' the scores and take the first index in the array.
+
+#+BEGIN_EXAMPLE
+      ⍒ scores
+3 1 2 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26
+#+END_EXAMPLE
+
+we can take the first by using 'take' ↑.
+
+#+BEGIN_EXAMPLE
+      1 ↑ ⍒ scores
+3
+#+END_EXAMPLE
+
+And to finalize this, we should negate the result.
+
+#+BEGIN_EXAMPLE
+      rotations ← ¯1×⍳26
+      scores ← score ¨ rotations ∘.caesar ⊂cipher
+      ¯1 × 1 ↑ ⍒ scores
+#+END_EXAMPLE
+
+therefore, our function break can now be defined
+
+#+BEGIN_EXAMPLE
+      break ← {rs ← ¯1×⍳26 ⋄ ss ← score ¨ rs∘.caesar ⊂⍵ ⋄ ¯1×1↑⍒ss }
+#+END_EXAMPLE
+
+and we can test it immediately with a new randomized cipher
+
+#+BEGIN_EXAMPLE
+      text ← 'the attack failed at dawn'
+      key←?26
+      cipher←key caesar text
+      cipher
+nby unnuwe zucfyx un xuqh
+      break cipher
+¯20
+      ¯20 caesar cipher
+the attack failed at dawn
+#+END_EXAMPLE
+
+the full listing of the functions we have defined can be seen by listing
+the functions in the current workspace.
+
+#+BEGIN_EXAMPLE
+      )fns
+break   caesar  indices_in_alfabet      rotate  score
+#+END_EXAMPLE
+
+we can now use 'vector representation' to display the definition of every 
+function.
+
+#+BEGIN_EXAMPLE
+      ⎕vr ¨ 'break' 'caesar' 'score' 'rotate' 'indices_in_alfabet'
+      ∇ break←{rs←¯1×⍳26 ⋄ ss←score¨rs∘.caesar⊂⍵ ⋄ ¯1×1↑⍒ss}
+      ∇ caesar←{rotated←(rotate ⍺),' ' ⋄ rotated[indices_in_alfabet ⍵]}
+      ∇ score←{⎕ML←3 ⋄ words←(' '≠⍵)⊂⍵ ⋄ +/+/words∘.≡dictionary}
+      ∇ rotate←{⍵⌽alfabet}
+      ∇ indices_in_alfabet←{alfabet⍳⍵}
+#+END_EXAMPLE
+
+
+
+
+
+** Breaking the securer caesar cipher
+
+There is one thing that can be done to make the caesar cipher slightly trickier
+to break. If we remove all spaces so that word boundaries become anonymous, we will
+not be able to break the 26 rotations into substrings and look them up in the dictionary,
+but we would be able to do the reverse; find matching substrings in the 26 rotations
+with the dictionary words. An alternate and more interesting approach, would be
+to measure the letter frequency, and see if it aligns with the letter frequency of
+proper english.
+Instead of passing 'hello world how are you' to the encryption algorithm, we will pass
+an equivalent of 'helloworldhowareyou'. The algorithm for breaking the slightly harder to break
+caesar cipher is thus
+
+#+BEGIN_EXAMPLE
+ 1. Try all 26 possible counter-rotations
+ 2. For every counter-rotation R_i
+    2.1 F_i is the measured letter frequency of the resulting text.
+        Calculate the distance D_i between english letter frequency and F_i
+ 3. The counter-rotation R_i with the lowest distance D_i is the most
+    probable key.
+#+END_EXAMPLE
+
+Lets start by creating our cleartext.
+
+#+BEGIN_EXAMPLE
+   text ← ⊂'thefirstincarnationofwhatwaslatertobetheaplprogramminglanguagewaspublishedand'
+   text,← ⊂'formalizedinaprogramminglanguageabookdescribinganotationinventedbykennetheiverson'
+   text,← ⊂'whileatHarvarduniversityiversonhaddevelopedamathematicalnotationformanipulating'
+   text,← ⊂'arraysthathetaughttohisstudentsiversondescribedthepremiseofthebookinthepreface'
+   text,← ⊂'appliedmathematicsislargelyconcernedwiththedesignandanalysisofexplicitprocedures'
+   text,← ⊂'forcalculatingtheexactorapproximatevaluesofvariousfunctionssuchexplicitprocedures'
+#+END_EXAMPLE
+
+This should be enough. Notice that we perform 6 element assignments into the array text
+which now holds 6 texts. The first assignment asigns an enclosed array (thus becoming a scalar)
+to text. The second assignment is a special, called 'modified assignment' ,←.
+text now holds six elements, each element being an array, we can verify this by looking
+at the shape and 'depth' ≡ of text.
+
+#+BEGIN_EXAMPLE
+      ⍴ text
+6
+      ≡ text
+2
+#+END_EXAMPLE
+
+we can now count the length of each string in text, by utilizing 'each' ¨ and shape.
+
+#+BEGIN_EXAMPLE
+      ⍴ ¨ text
+ 77  81  79  78  80  81
+#+END_EXAMPLE
+
+this means, that if we concatenate all strings in text, we should end up with one 
+single string of length 476. In order to concatenate all the strings, we utilize
+'comma-reduce' ,/ which reduces along the first dimension with comma; comma is catenation.
+
+#+BEGIN_EXAMPLE
+      ,/ text
+ thefirstincarnatio.....(a lot of text)
+      ⍴ ⊃ ,/ text
+476
+#+END_EXAMPLE
+
+You noticed that I 'disclosed' ⊃ the result from ,/ before applying shape.
+This is because all reductions with / and some operator produce a scalar result.
+But we wish to work on the enclosed array, so we disclose it.
+
+What we need now, is a d-fn for measuring letter frequency in a text.
+For each letter in the alphabet, we wish to count the amount of times it occurrs in 
+a text, and then divide this by the length of the text.
+We utilize the outer product once again, with the alfabet; in the example below,
+we do the following: for each of the 26 letters in the alfabet, perform array
+comparison with the given text to the left, letter by letter inside it.
+I produce a binary 26 by 30 matrix from this result with 'mix' ↑.
+
+#+BEGIN_EXAMPLE
+      ↑ alfabet ∘.= ⊂'abbacuswasatoolforcalculations'
+1 0 0 1 0 0 0 0 1 0 1 0 0 0 0 0 0 0 0 1 0 0 0 0 1 0 0 0 0 0
+0 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 1 0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 1 0 0 1 0 0 0 0 0 0
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0
+0 0 0 0 0 0 0 0 0 0 0 0 1 1 0 0 1 0 0 0 0 0 0 0 0 0 0 1 0 0
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0
+0 0 0 0 0 0 1 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1
+0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0
+0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+#+END_EXAMPLE
+
+what remains now, is to sum the 1's for each row, this is plus-reduce again.
+
+#+BEGIN_EXAMPLE
+      +/ ↑ alfabet ∘.= ⊂'abbacuswasatoolforcalculations'
+6 2 3 0 0 1 0 0 1 0 0 3 0 1 4 0 0 1 3 2 2 0 1 0 0 0
+#+END_EXAMPLE
+
+we can now see that there are 6 a's in the text, 2 b's etc. We now need to divide
+by the length of the text in question.
+
+#+BEGIN_EXAMPLE
+     (+/ ↑ alfabet ∘.= ⊂'abbacuswasatoolforcalculations')÷⍴'abbacuswasatoolforcalcula
+0.2 0.06666666667 0.1 0 0 0.03333333333 0 0 0.03333333333 0 0 0.1 0 0.03333333333......
+#+END_EXAMPLE
+
+We can now put this into a dynamic function (d-fn) and amaze at the conciseness.
+
+#+BEGIN_EXAMPLE
+      frequency ← { (+/↑alfabet∘.=⊂⍵)÷⍴⍵ }
+      frequency ⊃,/ text
+0.1029411765 0.01470588235 0.03571428571 ......
+#+END_EXAMPLE
+
+Next up, we need to compare how close a measured letter frequency is to the english 
+letter frequency, for that we need the english letter frequency (which I happen to have added).
+
+#+BEGIN_EXAMPLE
+      english
+0.08167 0.01492 0.02782 0.04253 0.12702 0.02228 0.02015 0.06094 0.06966 0.00153 0.00772 0.04025 0.02406 0.06749 0.07507 0.01929 0.00095 0.05987 0.06327 0.09056 0.02758 0.00978 0.0236 0.0015 0.01974 0.00074
+#+END_EXAMPLE
+
+Now we can write the d-fn for performing the calculation of euclidean distance between two vectors.
+This is no more than the square root of the sum of the squares of distances.
+
+#+BEGIN_EXAMPLE
+      distance ← { sqd←(⍺-⍵)*2 ⋄ sum←+/sqd ⋄ sum*0.5 }
+#+END_EXAMPLE
+
+Notice how the d-fn for distance has ⍺ and ⍵. This is because distance is dyadic, it will take a left
+argument and a right argument. ⍺ is the left argument, and ⍵ is the right argument.
+We can test it out with multiple vectors. Actually, let's calculate the euclidean distance to all discrete
+carthesian products in the range (1 1) to (10 10). We can easily produce all such pairs with monadic iota ⍳. 
+
+#+BEGIN_EXAMPLE
+      ⍳ 10 10
+ 1 1   1 2   1 3   1 4   1 5   1 6   1 7   1 8   1 9   1 10
+ 2 1   2 2   2 3   2 4   2 5   2 6   2 7   2 8   2 9   2 10
+ 3 1   3 2   3 3   3 4   3 5   3 6   3 7   3 8   3 9   3 10
+ 4 1   4 2   4 3   4 4   4 5   4 6   4 7   4 8   4 9   4 10
+ 5 1   5 2   5 3   5 4   5 5   5 6   5 7   5 8   5 9   5 10
+ 6 1   6 2   6 3   6 4   6 5   6 6   6 7   6 8   6 9   6 10
+ 7 1   7 2   7 3   7 4   7 5   7 6   7 7   7 8   7 9   7 10
+ 8 1   8 2   8 3   8 4   8 5   8 6   8 7   8 8   8 9   8 10
+ 9 1   9 2   9 3   9 4   9 5   9 6   9 7   9 8   9 9   9 10
+ 10 1  10 2  10 3  10 4  10 5  10 6  10 7  10 8  10 9  10 10
+#+END_EXAMPLE
+
+let us now perform outer product with distance to 1 1.
+
+#+BEGIN_EXAMPLE
+      (⍳ (10 10)) ∘.distance ⊂(1 1)
+0 1           2           3           4            5            6            7            8            9
+1 1.414213562 2.236067977 3.16227766  4.123105626  5.099019514  6.08276253   7.071067812  8.062257748  9.055385138
+2 2.236067977 2.828427125 3.605551275 4.472135955  5.385164807  6.32455532   7.280109889  8.246211251  9.219544457
+3 3.16227766  3.605551275 4.242640687 5            5.830951895  6.708203932  7.615773106  8.544003745  9.486832981
+4 4.123105626 4.472135955 5           5.656854249  6.403124237  7.211102551  8.062257748  8.94427191   9.848857802
+5 5.099019514 5.385164807 5.830951895 6.403124237  7.071067812  7.810249676  8.602325267  9.433981132 10.29563014
+6 6.08276253  6.32455532  6.708203932 7.211102551  7.810249676  8.485281374  9.219544457 10           10.81665383
+7 7.071067812 7.280109889 7.615773106 8.062257748  8.602325267  9.219544457  9.899494937 10.63014581  11.40175425
+8 8.062257748 8.246211251 8.544003745 8.94427191   9.433981132 10           10.63014581  11.3137085   12.04159458
+9 9.055385138 9.219544457 9.486832981 9.848857802 10.29563014  10.81665383  11.40175425  12.04159458  12.72792206
+#+END_EXAMPLE
+
+The last thing we need to do now, is to combine all of this, just like we did for the lookup attack.
+But, let's generate a random key and produce a cipher from the concatenated text.
+
+#+BEGIN_EXAMPLE
+      key←?26
+      cipher←key caesar ⊃,/text
+      cipher
+kyvwzijkzetrie.....(a lot of text)
+#+END_EXAMPLE
+
+notice how the old break d-fn will not work on this.
+
+#+BEGIN_EXAMPLE
+      break cipher
+¯1
+#+END_EXAMPLE
+
+Now, the grande finale.
+
+#+BEGIN_EXAMPLE
+      rotations←¯1×⍳26
+      distances ← english∘distance ¨ frequency ¨ rotations ∘.caesar ⊂cipher
+      ¯1 × 1↑⍋distances
+¯17
+      ¯17 caesar cipher
+thefirstincarnationofwhatwaslatertobetheapl...(lots of text)
+#+END_EXAMPLE
+
+The difference to the prior algorithm is that we have frequency on 'each' ¨ result, and 
+use 'grade-up' ⍋ to get the indices in an ascending order.
+Clearly, ¯17 is the counter-rotation, thus the original text was encrypted with 17 as the key.
+The finalizing d-fn now follows.
+
+#+BEGIN_EXAMPLE
+      freq_break←{ rs←¯1×⍳26 ⋄ ds ← english∘distance ¨ frequency ¨ rs ∘.caesar ⊂⍵ ⋄ ¯1×1↑⍋ds }
+      freq_break cipher
+¯17
+      ¯17 caesar cipher
+thefirstincarnationofwhatwaslatertobetheapl....(lots of text)
+#+END_EXAMPLE
+
+The full listing for this frequency breaking are shown below.
+
+#+BEGIN_EXAMPLE
+⎕vr ¨ 'freq_break' 'distance' 'frequency' 'caesar' 'rotate' 'indices_in_alfabet'
+∇ freq_break←{rs←¯1×⍳26 ⋄ ds←english∘distance¨frequency¨rs∘.caesar⊂⍵ ⋄ ¯1×1↑⍋ds}
+∇ distance←{sqd←(⍺-⍵)*2 ⋄ sum←+/sqd ⋄ sum*0.5}
+∇ frequency←{(+/↑alfabet∘.=⊂⍵)÷⍴⍵}
+∇ caesar←{rotated←(rotate ⍺),' ' ⋄ rotated[indices_in_alfabet ⍵]}
+∇ rotate←{⍵⌽alfabet}
+∇ indices_in_alfabet←{alfabet⍳⍵}
+#+END_EXAMPLE
+
