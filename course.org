@@ -829,3 +829,11 @@ and get the same result back.
 
 
 
+** Breaking the Vigenere Cipher
+
+The key part (no pun intended) of breaking the Vigenere cipher is to find the plausible
+key-length. Once this is done, the cipher will be broken much in the same way as an automated
+caesar letter frequency cipher attack.
+The act of finding the plausible key-length is called Kasinski Analysis.
+The Kasinski analysis is based on finding all repetitions and their respective distances 
+between each other in the text.
