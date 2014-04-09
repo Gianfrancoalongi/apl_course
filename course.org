@@ -1,4 +1,4 @@
-* APL by example, an inductive course for the curious hacker.
+* APL by example, an inductive course for the curious mind.
 
 The target audience for this course, is anyone who is fearless.
 You will be immediately thrown into Dyalog APL with expressions you can
@@ -7,13 +7,62 @@ While we walk through several short and sweet example programs, I will hold
 your hand along the way - telling you what I think and trying to answer the
 questions I would imagine you had, if you where sitting next to me right now,
 as I type this.
+I expect you to try out partial expressions in your Dyalog APL environment.
+For example, when I show you this
 
-You can find the online help on help.dyalog.com. This page is most valuable,
-and we will use it to look up things we don't remember or don't know.
+#+BEGIN_EXAMPLE
+    '*⍟'[1+t⍪⊖t←t,⌽t←n∘.≤n←⍳5]
+⍟⍟⍟⍟⍟⍟⍟⍟⍟⍟
+*⍟⍟⍟⍟⍟⍟⍟⍟*
+**⍟⍟⍟⍟⍟⍟**
+***⍟⍟⍟⍟***
+****⍟⍟****
+****⍟⍟****
+***⍟⍟⍟⍟***
+**⍟⍟⍟⍟⍟⍟**
+*⍟⍟⍟⍟⍟⍟⍟⍟*
+⍟⍟⍟⍟⍟⍟⍟⍟⍟⍟
+#+END_EXAMPLE
 
-I can not guarantee anything, but I will do my best to give you an extensive
-tour of Dyalog APL while pointing out particularly intersting things as we 
-come across them.
+I expect you to try out the different sub-expressions, let's start with 
+the innermost! And, one thing I forgot to say before; APL is evaluated
+from the right to the left.
+
+#+BEGIN_EXAMPLE
+    1+t⍪⊖t←t,⌽t←n∘.≤n←⍳5
+2 2 2 2 2 2 2 2 2 2
+1 2 2 2 2 2 2 2 2 1
+1 1 2 2 2 2 2 2 1 1
+1 1 1 2 2 2 2 1 1 1
+1 1 1 1 2 2 1 1 1 1
+1 1 1 1 2 2 1 1 1 1
+1 1 1 2 2 2 2 1 1 1
+1 1 2 2 2 2 2 2 1 1
+1 2 2 2 2 2 2 2 2 1
+2 2 2 2 2 2 2 2 2 2
+#+END_EXAMPLE
+
+which seems to be a matrix of 1's and 2's, interesting that we could
+index a text array (string) with a matrix!
+Next, let's go inwards, removing the 1+ 
+
+#+BEGIN_EXAMPLE
+    t⍪⊖t←t,⌽t←n∘.≤n←⍳5
+1 1 1 1 1 1 1 1 1 1
+0 1 1 1 1 1 1 1 1 0
+0 0 1 1 1 1 1 1 0 0
+0 0 0 1 1 1 1 0 0 0
+0 0 0 0 1 1 0 0 0 0
+0 0 0 0 1 1 0 0 0 0
+0 0 0 1 1 1 1 0 0 0
+0 0 1 1 1 1 1 1 0 0
+0 1 1 1 1 1 1 1 1 0
+1 1 1 1 1 1 1 1 1 1
+#+END_EXAMPLE
+
+Okay, so we could add 1 to a whole binary matrix, that is cool.
+I will expect you to do this kind of fearless jumps of faith 
+when you don't really understand an expression.
 
 * The Caesar cipher - implementing and breaking
 The Caesar cipher is a simple substitution cipher where the cipher is the result
@@ -295,9 +344,11 @@ We can partition an array according to the pattern of a binary mask by using
  this  is  a  piece  of  text  with  spaces
      ⍴ (' '≠text)⊂text
 8
+    ⎕ML←1
 #+END_EXAMPLE
 
-so, let's partition and search for hits! We will do this step-wise to introduce
+Do NOT forget to execute the last statement ⎕ML←1, it could have interesing
+consequences! So, let's partition and search for hits! We will do this step-wise to introduce
 the necessary concepts. First we want to split the string into substrings.
 We have seen how to do this in ⎕ML ← 3 (quad ML three).
 
@@ -305,6 +356,7 @@ We have seen how to do this in ⎕ML ← 3 (quad ML three).
    ⎕ML  ← 3
    text ← 'attack at dawn when the enemy soldiers are still sleeping'
    words ← (' ' ≠text)⊂text   
+   ⎕ML ← 1
 #+END_EXAMPLE
 
 We now want to know many of the words exist in the dictionary. This is done
@@ -385,7 +437,7 @@ environment, and once we have 'found the recipe' we put it into a d-fn.
 now we want to know which score is the highest ranked one, this can be done by aquiring
 the descending order of indices as they can be used to retrieve the sorted result 
 from an array. The function is called 'grade down' ⍒.
-And once again, and example is in order.
+And once again, an example is in order.
 
 #+BEGIN_EXAMPLE
       ⍒ 3 1 4 6 2
@@ -523,8 +575,8 @@ single string of length 476. In order to concatenate all the strings, we utilize
 #+END_EXAMPLE
 
 You noticed that I 'disclosed' ⊃ the result from ,/ before applying shape.
-This is because all reductions with / and some operator produce a scalar result.
-But we wish to work on the enclosed array, so we disclose it.
+This is because all reductions with the operator / and some function produce a scalar result.
+But we wish to work on the actual array, therefore we disclose it.
 
 What we need now, is a d-fn for measuring letter frequency in a text.
 For each letter in the alphabet, we wish to count the amount of times it occurrs in 
@@ -690,150 +742,125 @@ The full listing for this frequency breaking are shown below.
 ∇ indices_in_alfabet←{alfabet⍳⍵}
 #+END_EXAMPLE
 
-* The Vigenere cipher - implementing and breaking
+** Saving the work of the day
 
-The Vigenere cipher is a polyalfabetic cipher which was considered to be 
-unbreakable for a long time. At the core, it works by performing several
-independent caesar cipher encodings on the given text to produce the 
-cipher text. A gentleman called Friedrich Kasiski published a paper on how to attack
-the Vigenere Cipher, by first finding the possible key length. Once the possible
-key length was found, the cipher could be attacked in much the same way as
-the frequency attack on a plain caesar cipher.
-
-Let's start our journey by implementing the Vigenere cipher.
-
-** Implementation
-
-The original Vigenere cipher utilized a keyword instead of a numeric key.
-Let's take the key DYALOGAPL as an example. Next, a Vigenere table is created.
-The Vigenere table is a table of all 26 possible rotations of the alfabet.
+Now that I have something interesting, I would like to save it for future reference.
+Also, I would be upset if the computer crashed and all the work was lost.
+We can save the work by saving the workspace, I chose to save it was warmup
 
 #+BEGIN_EXAMPLE
-     key←'dyalogapl'
-     alfabet←⎕UCS 96+⍳26
-     table←↑(¯1+⍳26) ∘.⌽ ⊂alfabet
-     table
-abcdefghijklmnopqrstuvwxyz
-bcdefghijklmnopqrstuvwxyza
-cdefghijklmnopqrstuvwxyzab
-defghijklmnopqrstuvwxyzabc
-efghijklmnopqrstuvwxyzabcd
-fghijklmnopqrstuvwxyzabcde
-ghijklmnopqrstuvwxyzabcdef
-hijklmnopqrstuvwxyzabcdefg
-ijklmnopqrstuvwxyzabcdefgh
-jklmnopqrstuvwxyzabcdefghi
-klmnopqrstuvwxyzabcdefghij
-lmnopqrstuvwxyzabcdefghijk
-mnopqrstuvwxyzabcdefghijkl
-nopqrstuvwxyzabcdefghijklm
-opqrstuvwxyzabcdefghijklmn
-pqrstuvwxyzabcdefghijklmno
-qrstuvwxyzabcdefghijklmnop
-rstuvwxyzabcdefghijklmnopq
-stuvwxyzabcdefghijklmnopqr
-tuvwxyzabcdefghijklmnopqrs
-uvwxyzabcdefghijklmnopqrst
-vwxyzabcdefghijklmnopqrstu
-wxyzabcdefghijklmnopqrstuv
-xyzabcdefghijklmnopqrstuvw
-yzabcdefghijklmnopqrstuvwx
-zabcdefghijklmnopqrstuvwxy
+      )save warmup
+warmup saved Wed Apr  9 20:37:47 2014
 #+END_EXAMPLE
 
-Using the keyword, and the vigenere table, the keyword is written under
-the cleartext, repeating it as many times as necessary.
-We can do this in two steps, first we generate a repetition of the keyword
-which repeats as long as needed to fill up to the length of the cleartext.
+I can now clear the workspace and see that it is really clear by listing functions
+and variables
 
 #+BEGIN_EXAMPLE
-      (⍴ ⊃,/text) ⍴ key
-dyalogapldyalogapldyalogapldyalogapldyalogapld....(lots of text)
+      )clear
+clear ws
+      )fns
+      )vars
 #+END_EXAMPLE
 
-we can now laminate this below the cleartext, so you can see how this aligns.
+Let us load the warmup namespace again
 
 #+BEGIN_EXAMPLE
-      (⊃,/text),[0.5](⍴ ⊃,/text) ⍴ key
-thefirstincarnationofwhatwaslatertobetheaplprogramminglanguage....(lots of text)
-dyalogapldyalogapldyalogapldyalogapldyalogapldyalogapldyalogap....(lots of text)
+      )load warmup
+./warmup saved Wed Apr  9 20:37:47 2014
+      )fns
+break   caesar       distance  freq_break      frequency
+indices_in_alfabet   rotate    score
+      )vars
+alfabet    cipher   clear_text  dictionary
+distances  english  key         rotations       scores
 #+END_EXAMPLE
 
-for every character in the clear text, take the corresponding letter below it
-from the repetition, and find the corresponding row in the vigenere table starting
-with the same letter; replace the first letter as if doing a caesar rotation with 
-the selected row. 
-We start by transposing the laminated text with 'transpose' ⍉ and then break the rectangular matrix down 
-into pairs of letters with 'split' ↓.
+I noticed that I have some lingering variables I wish not to have, so I will
+expunge them from the workspace (here I apply ⎕ex to each name with ¨)
 
 #+BEGIN_EXAMPLE
-      ↓ ⍉ (⊃,/text),[0.5](⍴ ⊃,/text) ⍴ key
- td  hy  ea  fl  io  rg  sa  tp  il  nd  cy  aa  rl  no  ag  ta  ip ....(lots of text)
+      ⎕ex ¨ 'key' 'rotations' 'scores' 'distances'
 #+END_EXAMPLE
 
-what we want to do now, is to find the row in the vigenere table by means of the second
-letter in each pair. This is achieved by finding the index of the second letter in the
-first column of the vigenere table. This is done for all pairs.
+But what if we forget the name of our workspace?
+Then we list all workspaces with )lib, this is what I get on my Linux.
 
 #+BEGIN_EXAMPLE
-      { table[;1] ⍳ ⍵[2]} ¨ ↓ ⍉ (⊃,/text),[0.5](⍴ ⊃,/text) ⍴ key
-4 25 1 12 15 7 1 16 12 4 25 1 12 15 7 1 16 12 4 25 1 12 ... (lots of numbers)
+      )lib
+.
+        warmup
+/opt/mdyalog/14.0/64/unicode/ws
+      apl2in   apl2pcin conga   display dwsin   dwsout   fonts   ftp   groups  newleaf ops
+      postscri quadna   rainpro salt    smdemo  smdesign smtutor sqapl tutor   util
+      xfrcode  xlate
+/opt/mdyalog/14.0/64/unicode/samples/dfns
+      ddb     dfns    eval    max     min     tube
+/opt/mdyalog/14.0/64/unicode/samples/tcpip
+      chat    echo    qfiles  rexec   www
+/opt/mdyalog/14.0/64/unicode/samples/OO4APL
+      Chapter9.DWS       ComponentFile.DWS   ExcelWorkBook.DWS  Monthly.DWS
+      MonthlyAfter5.DWS  OOTools.DWS         PlanBook.DWS       PlanBookFinal.DWS  Queue.DWS
+      Random.DWS         TimeSeries.DWS      derivedgui.DWS     dotnet.DWS         guitools.DWS
 #+END_EXAMPLE
 
-the number is then used to select the full row from the table, finding the index of the
-first letter in the pair within the normal alfabet and indexing the selected row with 
-this index.
+So, what does the workspace look like outside of the Dyalog APL environment?
+It is a binary which will not be possible to interpret outside of the Dyalog APL
+environment. Let's exit the Dyalog APL environment and look at it with some standard 
+linux tools (strings, file and hexdump).
 
 #+BEGIN_EXAMPLE
-      cipher ← { c←alfabet⍳⍵[1] ⋄ r←table[;1]⍳⍵[2] ⋄ table[r;c]} ¨ ↓ ⍉ (⊃,/text),[0.5](⍴ ⊃,/text) ⍴ key
-      cipher
-wfeqwxsitqaacbgtxzqmfhvgtllvjaesxtdmhrhpovlecrerlasicroynr....(lots of text)
+   ⎕OFF
+$> file warmup
+warmup: Dyalog APL workspace type 14 subtype 1 64-bit unicode little-endian
+$> strings warmup
+Dyalog
+ABCDEFGHIJKLMNOPQRSTUVWXYZ
+0123456789
+....
+soldier
+attack
+dawn
+swords
+blood
+ERCP
+@$q8D
+attack
+dawn
+when
+enemy
+soldiers
+still
+sleeping
+...
+$> head -n 2 warmup | hexdump -C
+00000000  aa 03 0e 01 0e 00 fd a4  00 02 00 00 00 00 00 00  |................|
+00000010  60 ea ff ff ff ff ff ff  71 00 00 00 00 00 00 00  |`.......q.......|
+00000020  c0 36 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |.6..............|
+00000030  07 73 70 00 00 00 00 00  00 00 00 00 00 00 00 00  |.sp.............|
+00000040  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
+*
+00000060  80 3b 84 39 f1 7f 00 00  00 00 00 00 00 00 00 00  |.;.9............|
+00000070  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
+*
+00000090  77 41 84 39 f1 7f 00 00  00 00 00 00 00 00 00 00  |wA.9............|
+000000a0  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
+*
+000000c0  4b 63 9b 39 f1 7f 00 00  00 00 00 00 00 00 00 00  |Kc.9............|
+000000d0  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
+*
+000000f0  9c 5d 9b 39 f1 7f 00 00  00 00 00 00 00 00 00 00  |.].9............|
+00000100  00 00 00 00 00 00 00 00  50 f5 f7 ff ff ff ff ff  |........P.......|
+00000110  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
+*
+00000130  00 00 00 00 00 00 00 00  58 5b 00 00 00 00 00 00  |........X[......|
+00000140  48 0a 00 00 00 00 00 00  68 0a                    |H.......h.|
+0000014a
 #+END_EXAMPLE
 
-This is the Vigenere encryption algorithm.
-
-#+BEGIN_EXAMPLE
-      vigenere_encrypt ← { { c←alfabet⍳⍵[1] ⋄ r←table[;1]⍳⍵[2] ⋄ table[r;c]} ¨ ↓ ⍉ ⍵,[0.5](⍴ ⍵) ⍴ ⍺ }
-      cipher ← 'dyalogapl' vigenere_encrypt ⊃,/text
-      cipher
-wfeqwxsitqaacbgtxzqmfhvgtllvjaesxtdmhrhpovlecrerlasicroynr...(lots of text)
-#+END_EXAMPLE
-
-decryption of a cipher is done by using the cipher text position in the selected row as
-index for the normal alfabet.
-
-#+BEGIN_EXAMPLE
-      vigenere_decrypt ← { { r←table[;1]⍳⍵[2] ⋄ c←table[r;]⍳⍵[1] ⋄ alfabet[c] } ¨ ↓ ⍉ ⍵,[0.5](⍴ ⍵) ⍴ ⍺ }
-      cleartext ← 'dyalogapl' vigenere_decrypt cipher
-      cleartext
-thefirstincarnationofwhatwaslatertobetheapl.....(lots of text)
-#+END_EXAMPLE
-
-To ensure that this is working properly, we should be able to encrypt and decrypt with the same key
-and get the same result back.
-
-#+BEGIN_EXAMPLE
-      key←'monadicapplication'
-      text←'onceuponatimetherelivedanoldladybythefootofthemountainandthebigforestoutsidewasdarkandcold'
-      cipher←key vigenere_encrypt text
-      cleartext←key vigenere_decrypt cipher
-      text  ≡ cleartext
-1
-#+END_EXAMPLE
+Clearly, it will be VERY difficult to put this under version control.
+And this is why we will work with SALT scripts from now on.
+SALT scripts are Dyalog APL files which can be read from outside the Dyalog APL
+environment, just like normal source files from any other language.
 
 
-
-
-
-
-
-
-
-** Breaking the Vigenere Cipher
-
-The key part (no pun intended) of breaking the Vigenere cipher is to find the plausible
-key-length. Once this is done, the cipher will be broken much in the same way as an automated
-caesar letter frequency cipher attack.
-The act of finding the plausible key-length is called Kasinski Analysis.
-The Kasinski analysis is based on finding all repetitions and their respective distances 
-between each other in the text.
