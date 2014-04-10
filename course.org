@@ -864,3 +864,212 @@ SALT scripts are Dyalog APL files which can be read from outside the Dyalog APL
 environment, just like normal source files from any other language.
 
 
+* A Booking DSL 
+** SALT booking namespace
+A Domain Specific Language (DSL) is a language specific to a domain.
+We can design our own Booking DSL easily in Dyalog APL, creating a 
+set of instructions which feel natural for the users of the system.
+
+As I mentioned in the previous chapter, we will now use Dyalog APL SALT
+scripts, so we can read them from outside of the Dyalog APL environment.
+Let's start by creating our first SALT script.
+Use your favourite editor and create the file booking.dyalog, inside we 
+put the following empty namespace.
+
+#+BEGIN_EXAMPLE
+:NameSpace booking
+
+:EndNameSpace
+#+END_EXAMPLE
+
+we can now load this SALT script in the Dyalog APL environment using
+⎕SE.SALT.Load (I assign the result to ⎕ in order to show the shy result).
+
+#+BEGIN_EXAMPLE
+      ⎕←⎕SE.SALT.Load './booking.dyalog'
+#.booking
+#+END_EXAMPLE
+
+The #.booking result indicates that the root namespace # now has a namespace
+inside of it, called booking, accessible through #.booking. We can list all
+namespaces with ⎕NL 9
+
+#+BEGIN_EXAMPLE
+      ⎕NL 9
+booking
+#+END_EXAMPLE
+
+** Creating the database
+We can now add a function to initialize the room database with 4 bookable
+rooms, each room has 8 bookable hours, and 5 days a week. We do this by
+typing #.booking C-e (control-e). This will open an editor window, allowing
+us to enter a function into the booking namespace.
+But, we will close this window (escape) and experiment a bit more in the 
+Dyalog APL repl.
+
+#+BEGIN_EXAMPLE
+Dyalog APL/S-64 Version 14.0.19453          ┌booking──────────────────────────────────┐
+Unicode Edition                             │    :NameSpace booking                   │
+Thu Apr 10 20:04:26 2014                    │                                         │
+clear ws                                    │    :EndNameSpace                        │
+      ⎕SE.SALT.Load './booking.dyalog'      │                                         │
+      ⎕←⎕SE.SALT.Load './booking.dyalog'    │                                         │
+#.booking                                   │                                         │
+      ⎕NL 9                                 │                                         │
+booking                                     │                                         │
+      #.booking                             │                                         │
+                                            └⍟────────────────────────────────────────┘
+
+#+END_EXAMPLE
+
+But, we will close this window (escape) and experiment a bit more in the 
+Dyalog APL repl. Let's start by creating a 4 (rooms) by 8 (hours) matrix
+of all zeroes using reshape ⍴ in dyadic form.
+
+#+BEGIN_EXAMPLE
+    4 8 ⍴ 0
+0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0
+#+END_EXAMPLE
+
+Every row represents a room and every column represents an hour, a 0 means
+the room is free, a number indicates it's booked by someone with an id equal
+to the number. Now, let's make a cube out of this, so we have 5 days.
+
+#+BEGIN_EXAMPLE
+   5 4 8 ⍴ 0
+0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0
+
+0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0
+
+0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0
+
+0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0
+
+0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0
+#+END_EXAMPLE
+
+every matrix is one day, and the same rules apply for each such matrix as for 
+the 4 8 ⍴ 0 case. This seems good enough, let's put this expression into the
+booking namespace and call it init_db
+
+#+BEGIN_EXAMPLE
+     #.booking.init_db  ← { #.db ← 5 4 8 ⍴ 0 }
+#+END_EXAMPLE
+
+the assignment above assigns the dynamic function to init_db in #.booking.
+We can check that the d-fn has been defined by listing the available functions
+in the #.booking namespace using ⎕NL 3 from within the #.booking namespace
+
+#+BEGIN_EXAMPLE
+     #.booking.⎕NL 3
+init_db
+#+END_EXAMPLE
+
+we can also visualize the function using ⎕vr (vector representation) 
+
+#+BEGIN_EXAMPLE
+     ⎕vr '#.booking.init_db'
+     ∇ init_db←{#.db←5 4 8⍴0}
+     ∇
+#+END_EXAMPLE
+
+if we now run the init_db function, a db will be created in the root 
+namespace. 
+
+#+BEGIN_EXAMPLE
+      )vars
+      #.booking.init_db ⍬
+      )vars
+db
+      db
+0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0
+
+0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0
+
+0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0
+
+0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0
+
+0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0
+#+END_EXAMPLE
+
+Notice how the d-fn has to be invoked with a zilde ⍬ (empty) argument.
+if we don't do that, the evaluation will just return the d-fn itself.
+
+#+BEGIN_EXAMPLE
+      #.booking.init_db
+{#.db←5 4 8⍴0}
+#+END_EXAMPLE
+
+** Booking a room
+What if we could type the following and actually get what we expect?
+
+#+BEGIN_EXAMPLE
+      book first free on friday for 3 from 2
+#+END_EXAMPLE
+
+In case you don't really follow the intention of the above, it means
+to book the first freely available room on friday for 3 hours if 
+possible from the second hour and onwards.
+
+Let's start with the rightmost (as APL is interpreted from right to left).
+The 'from' function. It would be nice if this returns an array of hours
+which are in the range, thus for this example
+
+#+BEGIN_EXAMPLE
+      from 2 
+2 3 4 5 6 7 8
+#+END_EXAMPLE
+
+Let's start by creating all numbers up to 8, and then dropping the first
+x-1.
+
+#+BEGIN_EXAMPLE
+      ⍳8
+1 2 3 4 5 6 7 8
+      1↓⍳8
+2 3 4 5 6 7 8
+#+END_EXAMPLE
+
+we now put this into from in the #.booking namespace
+
+#+BEGIN_EXAMPLE
+      #.booking.from←{(¯1+⍵)↓⍳8}
+      #.booking.from 2
+2 3 4 5 6 7 8
+#+END_EXAMPLE
+
+
