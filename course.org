@@ -863,7 +863,6 @@ And this is why we will work with SALT scripts from now on.
 SALT scripts are Dyalog APL files which can be read from outside the Dyalog APL
 environment, just like normal source files from any other language.
 
-
 * A Booking DSL 
 ** SALT booking namespace
 A Domain Specific Language (DSL) is a language specific to a domain.
@@ -912,7 +911,7 @@ Dyalog APL/S-64 Version 14.0.19453          ┌booking────────�
 Unicode Edition                             │    :NameSpace booking                   │
 Thu Apr 10 20:04:26 2014                    │                                         │
 clear ws                                    │    :EndNameSpace                        │
-      ⎕SE.SALT.Load './booking.dyalog'      │                                         │
+                                            │                                         │
       ⎕←⎕SE.SALT.Load './booking.dyalog'    │                                         │
 #.booking                                   │                                         │
       ⎕NL 9                                 │                                         │
@@ -967,14 +966,43 @@ to the number. Now, let's make a cube out of this, so we have 5 days.
 #+END_EXAMPLE
 
 every matrix is one day, and the same rules apply for each such matrix as for 
-the 4 8 ⍴ 0 case. This seems good enough, let's put this expression into the
-booking namespace and call it init_db
+the 4 8 ⍴ 0 case. This seems good enough, let us now open the #.booking
+namespace by pressing C-e (control-e) on #.booking in the Dyalog environment.
 
 #+BEGIN_EXAMPLE
-     #.booking.init_db  ← { #.db ← 5 4 8 ⍴ 0 }
+:NameSpace booking
+
+[0]       init_db  ← { #.db ← 5 4 8 ⍴ 0 }
+
+:EndNameSpace
 #+END_EXAMPLE
 
-the assignment above assigns the dynamic function to init_db in #.booking.
+Remember to exit the editor by pressing escape.
+When we press escape, Dyalog SALT will ask if we want to update the source
+file for "#.booking", I press y for YES.
+
+#+BEGIN_EXAMPLE
+ Update source file for "#.booking"?
+
+ If you choose YES, file </home/gianfranco/APL_course/booking.dyalog> will be overwritten.
+
+ If you choose NO, the changes won't be filed
+ Y/N? Y
+#+END_EXAMPLE
+
+We can now check that the file has been updated outside of the Dyalog APL environment
+by opening it with our favourite editor, or just doing less on it.
+
+#+BEGIN_EXAMPLE
+> less booking.dyalog
+:NameSpace booking
+
+    init_db←{#.db←5 4 8 ⍴ 0}
+
+:EndNameSpace
+#+END_EXAMPLE
+
+We have now assigned the dynamic function to init_db in #.booking.
 We can check that the d-fn has been defined by listing the available functions
 in the #.booking namespace using ⎕NL 3 from within the #.booking namespace
 
