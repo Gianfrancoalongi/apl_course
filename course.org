@@ -1092,12 +1092,136 @@ x-1.
 2 3 4 5 6 7 8
 #+END_EXAMPLE
 
-we now put this into from in the #.booking namespace
+we now put this into from in the #.booking namespace in the same way as before
+#.booking (C-e) edit and esc, Y. We can list the source code of from with ⎕vr.
 
 #+BEGIN_EXAMPLE
-      #.booking.from←{(¯1+⍵)↓⍳8}
-      #.booking.from 2
-2 3 4 5 6 7 8
+      ⎕vr '#.booking.from'
+     ∇ from←{(¯1+⍵)↓⍳8}
+     ∇
 #+END_EXAMPLE
 
+Next, lets write the 'for' function. It would seem appropriate for this function
+to take 3 of the hours it was given as the second argument (the hours we get in from).
+This is really no more than just a normal take ↑, the only thing making it interesting
+for us is that we get two arguments on the right of 'for' and we need to take as many
+elements from the second input argument ⍵[2] as the first argument ⍵[1].
 
+#+BEGIN_EXAMPLE
+     ⎕vr '#.booking.for'
+     ∇ for←{⍵[1]↑⍵[2]}
+     ∇
+#+END_EXAMPLE
+
+Let us now try chaining both of these and see what happens
+
+#+BEGIN_EXAMPLE
+      #.booking.for 3 #.booking.from 2
+3 0
+#+END_EXAMPLE
+
+hm, this seems odd, this is certainly not what we expected. What if we put in some
+parenthesis around the from?
+
+#+BEGIN_EXAMPLE
+      #.booking.for 3 (#.booking.from 2)
+┌→────────────┬─────────────┬─────────────┐
+│2 3 4 5 6 7 8│0 0 0 0 0 0 0│0 0 0 0 0 0 0│
+└~───────────→┴~───────────→┴~───────────→┘
+#+END_EXAMPLE
+
+well, this also looks odd, what happened here is that 3 take ↑ on an array will
+take the array and then APL will produce two more elements to allow the 3 ↑ to 
+return something sensible. For an integer array of length 7, the fill element is
+an integer array of length 7 withh all zeroes. This leads me to conclude that
+=⍵[2]= is considered as an enclosed array (⊂ 2 3 4 5 6 7 8)
+
+#+BEGIN_EXAMPLE
+     3 ↑ ⊂ 2 3 4 5 6 7 8
+┌→────────────┬─────────────┬─────────────┐
+│2 3 4 5 6 7 8│0 0 0 0 0 0 0│0 0 0 0 0 0 0│
+└~───────────→┴~───────────→┴~───────────→┘
+
+    ⍝ which is NOT the same as 
+
+     3 ↑ 2 3 4 5 6 7 8
+2 3 4
+#+END_EXAMPLE
+
+it is still to early for you to realize this, but what was originally happening
+was that in the the expression =#.booking.for 3 #.booking.from 2= the 3 is passed
+as the left (⍺) argument to =#.booking.from=. So, what we need to do with our DSL
+is to accept the left argument and just pass it on. Let us redefine the 'from'
+function.
+
+#+BEGIN_EXAMPLE
+     ⎕vr '#.booking.from'
+     ∇ from←{⍺,(¯1+⍵)↓⍳8}
+     ∇
+#+END_EXAMPLE
+
+The result of from will now be one array with the left argument tacked on in the
+beginning of the array. Let us redefine for to take the first element as the 
+number of elements to take.
+
+#+BEGIN_EXAMPLE
+     ⎕vr '#.booking.for'
+     ∇ for←{(⊃⍵)↑1↓⍵}
+     ∇
+#+END_EXAMPLE
+
+this definition is different from the previous one, so let me break it down 
+for you.
+
+#+BEGIN_EXAMPLE
+     for←{ (⊃⍵)   ↑    1↓⍵   }
+             ↑           ↑
+             |          / \
+             |        this means that I drop the first element
+             |        of the array (the left argument = the 3)
+            / \
+            ⊃⍵ is the same as 1↑⍵, this is the first element of ⍵.
+#+END_EXAMPLE
+
+redoing the chaining should now work, but first, let us change namespace with ⎕CS
+so we do not need to reference the functions with the annoying '#.booking' duplication.
+First I will show you how to know which namespace I am inside at the moment.
+
+#+BEGIN_EXAMPLE
+      ⎕THIS
+#
+#+END_EXAMPLE
+
+⎕THIS returns the root namespace '#', therefore we are in the root namespace.
+Let us go into the #.booking namespace 
+
+#+BEGIN_EXAMPLE
+      ⎕CS #.booking
+      ⎕THIS
+#.booking
+#+END_EXAMPLE
+
+in here, we will be able to see all the functions with ⎕NL 3
+
+#+BEGIN_EXAMPLE
+      ⎕NL 3
+for
+from
+init_db
+#+END_EXAMPLE
+
+time for the famous chaining again!
+
+#+BEGIN_EXAMPLE
+      for 3 from 2
+2 3 4
+#+END_EXAMPLE
+
+This is great, it works just like we want it to. Now, back to the original sentence
+in our DSL
+
+#+BEGIN_EXAMPLE
+      book first free on friday for 3 from 2
+#+END_EXAMPLE
+
+we need to support 'on friday'
