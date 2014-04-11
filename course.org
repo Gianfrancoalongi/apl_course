@@ -1105,7 +1105,7 @@ Next, lets write the 'for' function. It would seem appropriate for this function
 to take 3 of the hours it was given as the second argument (the hours we get in from).
 This is really no more than just a normal take ↑, the only thing making it interesting
 for us is that we get two arguments on the right of 'for' and we need to take as many
-elements from the second input argument ⍵[2] as the first argument ⍵[1].
+elements from the second input argument =⍵[2]= as the first argument =⍵[1]=.
 
 #+BEGIN_EXAMPLE
      ⎕vr '#.booking.for'
@@ -1224,4 +1224,222 @@ in our DSL
       book first free on friday for 3 from 2
 #+END_EXAMPLE
 
-we need to support 'on friday'
+with a list of hours completed, what we need now is to support the day selection,
+this part is expressed through 'on friday'. What we would like from this part of 
+the program is either a submatrix from the fifth day, or a number 5 together with 
+the array of hours from the previous part of the chain.
+I will aim for the submatrix part, returning a 4 x H matrix where H is the length
+of the array we got as a result of the 'from' function.
+
+Let's start by defining friday as a number
+
+#+BEGIN_EXAMPLE
+      friday←5
+      friday
+5
+#+END_EXAMPLE
+
+and then modifying 'for' so that it concatenates the left ⍺ argument at the front
+of the resulting array. Remember to type the function name for and pressing C-e 
+(control e), and to exit editing by escape and accepting the change.
+
+#+BEGIN_EXAMPLE
+     ⎕vr 'for'
+     ∇ for←{⍺,(⊃⍵)↑1↓⍵}
+     ∇
+#+END_EXAMPLE
+
+now the function 'on' is just a dummy function that returns exactly what is given
+to it on the right side. This allows us to build a DSL with 'filler' words that 
+gives the syntax a more natural feeling.
+
+#+BEGIN_EXAMPLE
+     ⎕vr 'on'
+     ∇ on←{⍵}
+     ∇
+#+END_EXAMPLE
+
+thus the chain now works all the way up to 'on'
+
+#+BEGIN_EXAMPLE
+      on friday for 3 from 2
+5 2 3 4
+#+END_EXAMPLE
+
+now 'book first free' remains, it would be ideal if the 'book' function does
+all the actual booking and just receives data necessary to perform all the
+insertions in the matrix. With that goal in mind, we need to pass day index (chec),
+row index (not there yet), and hour indices (check).
+The role of 'first free' then seems to select the correct row, which they quite
+coincidentally will do. 
+
+'free' will be used to select all rooms (rows) in the given day (submatrix) which 
+have all the time slots marked as free (set to 0). For this, I will do some 
+laboration in the Dyalog APL environment with a fake cube. I create a fake cube
+with two submatrices nullified.
+
+#+BEGIN_EXAMPLE
+      m←3 4 4 ⍴ ⍳ 48
+      m[2;2 3;2 3 4]←0
+      m
+ 1  2  3  4
+ 5  6  7  8
+ 9 10 11 12
+13 14 15 16
+
+17 18 19 20
+21  0  0  0
+25  0  0  0
+29 30 31 32
+
+33 34 35 36
+37 38 39 40
+41 42 43 44
+45 46 47 48
+#+END_EXAMPLE
+
+Now I want to find the expression that returns the indices of the rows in the second
+submatrix for which the columns 2 3 4 are all zero. First, let us pass the same kind
+of data =2 2 3 4= to tour dynamic function as we get from our chain expression.
+We start by selecting the second submatrix, and all the interesting columns.
+
+#+BEGIN_EXAMPLE
+      { m[⊃2;;1↓⍵] } 2 2 3 4
+18 19 20
+ 0  0  0
+ 0  0  0
+30 31 32
+#+END_EXAMPLE
+
+next we need to check if the columns add up to 0 (meaning they are all zero).
+This is achieved with plus-reduction over the selected submatrix, and testing
+equality with zero over the array
+
+#+BEGIN_EXAMPLE
+      { +/m[⊃2;;1↓⍵] } 2 2 3 4
+57 0 0 93
+      { 0=+/m[⊃2;;1↓⍵] } 2 2 3 4
+0 1 1 0
+#+END_EXAMPLE
+
+next we use this binary array to select the indices of the rows with 'compress' /.
+We generate all the indices of the rows by generating all numbers from 1 to (2⊃⍴m)
+which is the second dimension of the cube - using ⍳.
+
+#+BEGIN_EXAMPLE
+     { (0=+/m[⊃⍵;;1↓⍵])/(⍳2⊃⍴m) } 2 2 3 4
+2 3
+#+END_EXAMPLE
+
+and this is it, this will be our new function we will add to #.booking, however,
+we wish to pass this result together with all the other data, so we should put
+this at the front of the data we got. I defined the dynamic function on multiple
+lines as it becomes more readable with variable assignments of intermedia results.
+
+:     ⎕vr 'free'
+:     ∇ free←{ba←0=+/#.db[⊃⍵;;1↓⍵]
+: [1]       r←ba/⍳2⊃⍴#.db
+: [2]       (⊂r),⍵}
+:      ∇
+
+trying out our new function with =]box on= shows that the result is
+an array with 5 elements, the first element being the rows which 
+are free.
+
+#+BEGIN_EXAMPLE
+      free on friday for 3 from 2
+┌→──────┬─┬─┬─┬─┐
+│1 2 3 4│5│2│3│4│
+└~─────→┴─┴─┴─┴─┘
+#+END_EXAMPLE
+
+next, 'free' selects the first number in the first element (array of indices)
+and returns it together with the rest of the data.
+
+#+BEGIN_EXAMPLE
+     ⎕vr 'first'
+     ∇ first←{(⊃⊃⍵),1↓⍵}
+     ∇
+#+END_EXAMPLE
+
+our chain works all the way up to the last piece of the puzzle.
+
+#+BEGIN_EXAMPLE
+      first free on friday for 3 from 2
+1 5 2 3 4
+#+END_EXAMPLE
+
+we will now utilize this data to create the 'book' function.
+The 'book' function simply indexes the correct matrix elements
+and sets them to 1 (our current user id).
+
+#+BEGIN_EXAMPLE
+     ⎕vr 'book'
+     ∇ book←{#.db[2⊃⍵;1⊃⍵;2↓⍵]←1}
+     ∇
+#+END_EXAMPLE
+
+Let us now look at the #.db before
+
+#+BEGIN_EXAMPLE
+      #.db
+0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0
+
+0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0
+
+0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0
+
+0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0
+
+0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0
+
+#+END_EXAMPLE
+
+and after our full chain 
+
+#+BEGIN_EXAMPLE
+
+      book first free on friday for 3 from 2
+      #.db
+0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0
+
+0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0
+
+0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0
+
+0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0
+
+0 1 1 1 0 0 0 0
+0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0
+#+END_EXAMPLE
+
+
