@@ -9,6 +9,13 @@
           r←ba/⍳2⊃⍴#.db
           (⊂r),⍵}
     first←{(⊃⊃⍵),1↓⍵}
-    book←{#.db[2⊃⍵;1⊃⍵;2↓⍵]←1}
+    book←{bid←get_next_bid ⍬ ⋄#.db[2⊃⍵;1⊃⍵;2↓⍵]←bid⋄bid}
+                            
+                            
+    init_bid←{ #.bid ← 1 }
+    get_next_bid←{ r←#.bid⋄#.bid←1+r⋄r}
+    id←{⍵}
+    with←{⍵}
+    unbook←{(,#.db)[(,#.db=⍵)/⍳⍴,#.db]←0}
 
 :EndNameSpace

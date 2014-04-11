@@ -1464,15 +1464,128 @@ the environment.
 #+END_EXAMPLE
 ** Unbooking a room
 In the same vein as before, it would be good to be able to 
-unbook the room I booke before.
-Given that I typed
-
+unbook the room I booked before.
+If I previously typed
 :       book first free on friday for 3 from 2
+then it would be nice to be able to use some kind of booking id
+which I presumably got from the previous booking.
+For this example, let us assume I got a booking id of 10
+:       unbook with id 10
+We want the function 'book' to return a booking id when it succeeds.
+Let us do this by assigning the booking id to the rooms, as this is
+a simple example, let us have a global booking id (bid) counter which 
+increases for each booking. We will write a function to initialize
+the booking id and one function to get the next booking id and increasing
+the booking id counter.
 
-then it would be nice to be able to say 
+#+BEGIN_EXAMPLE
+     ⎕vr '#.booking.init_bid'
+     ∇ init_bid←{#.bid←1}
+     ∇
+#+END_EXAMPLE
+and the get_next_booking_id
+#+BEGIN_EXAMPLE
+     ⎕vr '#.booking.get_next_bid'
+     ∇ get_next_bid←{ r←#.bid ⋄ #.bid←1+r ⋄ r }
+     ∇
+#+END_EXAMPLE
 
-:       unbook booked on friday for 3 from 2
+We can now test this
 
-the assumption is that each user's command is executed with the
-assumption that the user can only manipulate his/her own bookings.
+#+BEGIN_EXAMPLE
+      #.booking.init_bid  ⍬
+      #.booking.get_next_bid ⍬
+1
+      #.booking.get_next_bid ⍬
+2
+      #.booking.get_next_bid ⍬
+3
+#+END_EXAMPLE
+
+we would now like to change the book function to use the next 
+available bid when booking, and returning said bid.
+
+#+BEGIN_EXAMPLE
+     ⎕vr '#.booking.book'
+     ∇ book←{bid←get_next_bid ⍬⋄ #.db[2⊃⍵;1⊃⍵;2↓⍵]←bid ⋄ bid}
+     ∇
+#+END_EXAMPLE
+
+Remember that the code above is semantically equivalent to the
+code below on multiple lines
+
+#+BEGIN_EXAMPLE
+     ∇ book←{ bid←get_next_bid ⍬
+              #.db[2⊃⍵;1⊃⍵;2↓⍵]←bid
+              bid}
+     ∇
+#+END_EXAMPLE
+
+Let us try this as well
+
+#+BEGIN_EXAMPLE
+      ⎕CS '#.booking'
+      init_bid  ⍬
+      init_db ⍬
+      book first free on friday for 3 from 2
+1
+      book first free on friday for 3 from 2
+2
+      book first free on friday for 3 from 2
+3
+      #.db
+0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0
+
+0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0
+
+0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0
+
+0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0
+
+0 1 1 1 0 0 0 0
+0 2 2 2 0 0 0 0
+0 3 3 3 0 0 0 0
+0 0 0 0 0 0 0 0
+#+END_EXAMPLE
+
+we can now start implementing the wanted functionality
+: unbook with id 10
+here we note that 'with' and 'id' are probably filler
+words, so they should be identity functions.
+
+#+BEGIN_EXAMPLE
+     ⎕vr 'id'
+     ∇ id←{⍵}
+     ∇
+     ⎕vr 'with'
+     ∇ with←{⍵}
+     ∇
+     with id 10
+10
+#+END_EXAMPLE
+
+the 'unbook' function should now accept the bid and find
+all matrix elements where this bid is used and release them
+(set them to 0).
+
+#+BEGIN_EXAMPLE
+     ⎕vr 'unbook'
+     ∇ unbook←{(,#.db)[(,#.db=⍵)/⍳⍴,#.db]←0}
+     ∇
+#+END_EXAMPLE
+
+This one requires a bit of explanation, and fear not, for it
+is easy!
 
