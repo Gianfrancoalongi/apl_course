@@ -863,7 +863,7 @@ And this is why we will work with SALT scripts from now on.
 SALT scripts are Dyalog APL files which can be read from outside the Dyalog APL
 environment, just like normal source files from any other language.
 
-* A Booking DSL 
+* A Tiny Booking DSL 
 ** SALT booking namespace
 A Domain Specific Language (DSL) is a language specific to a domain.
 We can design our own Booking DSL easily in Dyalog APL, creating a 
@@ -1442,4 +1442,37 @@ and after our full chain
 0 0 0 0 0 0 0 0
 #+END_EXAMPLE
 
+We can now look at the booking.dyalog SALT script from outside
+the environment.
+
+#+BEGIN_EXAMPLE
+> cat booking.dyalog
+:NameSpace booking
+
+    init_db←{#.db←5 4 8 ⍴ 0}
+    from←{⍺,(¯1+⍵)↓⍳8}
+    for←{⍺,(⊃⍵)↑1↓⍵}
+    on←{⍵}
+    friday←5
+    free←{ba←0=+/#.db[⊃⍵;;1↓⍵]
+          r←ba/⍳2⊃⍴#.db
+          (⊂r),⍵}
+    first←{(⊃⊃⍵),1↓⍵}
+    book←{#.db[2⊃⍵;1⊃⍵;2↓⍵]←1}
+
+:EndNameSpace
+#+END_EXAMPLE
+** Unbooking a room
+In the same vein as before, it would be good to be able to 
+unbook the room I booke before.
+Given that I typed
+
+:       book first free on friday for 3 from 2
+
+then it would be nice to be able to say 
+
+:       unbook booked on friday for 3 from 2
+
+the assumption is that each user's command is executed with the
+assumption that the user can only manipulate his/her own bookings.
 
