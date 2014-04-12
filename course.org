@@ -1587,5 +1587,179 @@ all matrix elements where this bid is used and release them
 #+END_EXAMPLE
 
 This one requires a bit of explanation, and fear not, for it
-is easy!
+is easy! Let us break it down into steps, for this demonstration
+I will set #.db to a 2 day, 4 room, 3 hour matrix of zeroes.
+The hours 2 and 3 on the second and third rooms for the second
+day will be booked with bid 23.
 
+#+BEGIN_EXAMPLE
+      #.db←2 4 3 ⍴ 0
+      #.db
+0 0 0
+0 0 0
+0 0 0
+0 0 0
+
+0 0 0
+0 0 0
+0 0 0
+0 0 0
+      #.db[2;2 3;2 3]←23
+      #.db
+0  0  0
+0  0  0
+0  0  0
+0  0  0
+
+0  0  0
+0 23 23
+0 23 23
+0  0  0
+#+END_EXAMPLE
+
+Let us now look at the innermost part of the unbook expression.
+:     (,#.db=⍵)
+This expression tests the cube for equality with the supplied bid, 
+producing a binary cube and then ravels it. Ravel is a function 
+that produces an array out of any higher-order array (matrix,cube,...).
+Let's test this expression step by step.
+#+BEGIN_EXAMPLE
+      #.db=23
+0 0 0
+0 0 0
+0 0 0
+0 0 0
+
+0 0 0
+0 1 1
+0 1 1
+0 0 0
+      ,#.db=23
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 1 0 1 1 0 0 0
+#+END_EXAMPLE
+
+next, this result is used to compress the indices of all elements in the
+cube.
+:    (,#.db=⍵)/⍳⍴,#.db
+Let's have a look at the left side of the compression, this is the ravel
+of the #.db, and then we take the shape of that (the length) and produce
+all numbers from 1 to the length of the ravel; effectively producing
+all array-indices of the raveled elements.
+
+#+BEGIN_EXAMPLE
+      ,#.db
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 23 23 0 23 23 0 0 0
+      ⍴,#.db
+24
+      ⍳⍴,#.db
+1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24
+#+END_EXAMPLE
+
+The compression of this with the binary array will select the indices
+which have a 23 in the raveled array.
+
+#+BEGIN_EXAMPLE
+      (,#.db=23)/⍳⍴,#.db
+17 18 20 21
+#+END_EXAMPLE
+
+Looking at the outermost expression, we now use these indices to assign values in #.db, 
+but note that this actually happens on the raveled version of #.db!
+:     (,#.db)[ 17 18 20 21 ]←0
+If we execute this in the shell, and check #.db we will see that the cube has actually
+been updated properly.
+
+#+BEGIN_EXAMPLE
+      #.db
+0  0  0
+0  0  0
+0  0  0
+0  0  0
+
+0  0  0
+0 23 23
+0 23 23
+0  0  0
+      (,#.db)[ 17 18 20 21 ]←0
+      #.db
+0 0 0
+0 0 0
+0 0 0
+0 0 0
+
+0 0 0
+0 0 0
+0 0 0
+0 0 0
+#+END_EXAMPLE
+
+** Demonstration 
+Thus, we can now book, and unbook! A short demonstration is in order of the full flow.
+Starting of with db and bid initialization, then performing three different bookings.
+
+#+BEGIN_EXAMPLE
+      init_db ⍬
+      init_bid ⍬
+      book first free on friday for 3 from 2
+1
+      book first free on friday for 4 from 1
+2
+      book first free on friday for 2 from 3
+3
+      #.db
+0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0
+
+0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0
+
+0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0
+
+0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0
+
+0 1 1 1 0 0 0 0
+2 2 2 2 0 0 0 0
+0 0 3 3 0 0 0 0
+0 0 0 0 0 0 0 0
+#+END_EXAMPLE
+
+Next, we will unbook the booking with bid 2.
+
+#+BEGIN_EXAMPLE
+      unbook with id 2
+      #.db
+0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0
+
+0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0
+
+0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0
+
+0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0
+
+0 1 1 1 0 0 0 0
+0 0 0 0 0 0 0 0
+0 0 3 3 0 0 0 0
+0 0 0 0 0 0 0 0
+#+END_EXAMPLE
