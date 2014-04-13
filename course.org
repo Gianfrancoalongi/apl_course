@@ -1693,7 +1693,107 @@ been updated properly.
 0 0 0
 #+END_EXAMPLE
 
-** Demonstration 
+** Human readable visualization
+Not many users of a system (except ALP developers) would appreciate staring at
+arrays and matrices. Let us now make this human readable by adding a show function
+that displays the #.db in a nicer way. As a user, I would like to be able to write 
+any of the following
+:    show all
+:    show monday tuesday 
+:    show thursday
+that is, I would like a show function that displays the room calendars for all days
+or for an array of days or a single day. 
+It helps when doing this to have some data, so I set up some bookings quickly.
+
+#+BEGIN_EXAMPLE
+      init_db ⍬
+      init_bid
+ ∇init_bid
+      init_bid ⍬
+      book first free on friday for 3 from 2
+1
+      book first free on friday for 4 from 1
+2
+      book first free on friday for 2 from 3
+3
+#+END_EXAMPLE
+
+Let's start from the top, all should be an array of all week-day numbers.
+This is done by editing the #.booking namespace (as usual) and just entering
+:    all ← ⍳5
+if we enter all in the Dyalog APL environment we get what we expect.
+#+BEGIN_EXAMPLE
+     all
+1 2 3 4 5
+#+END_EXAMPLE
+
+next, the show function needs to accept an array of numbers and pretty-printing
+the matrices for the days indicated by the array. Let us experiment and dry-run
+this in the Dyalog APL environment. I will focus on pretty-printing one day
+and then apply this for all days.
+
+#+BEGIN_EXAMPLE
+      { #.db[⍵;;] } 5
+0 1 1 1 0 0 0 0
+2 2 2 2 0 0 0 0
+0 0 3 3 0 0 0 0
+4 4 4 4 0 0 0 0
+      { 0=#.db[⍵;;] } 5
+1 0 0 0 1 1 1 1
+0 0 0 0 1 1 1 1
+1 1 0 0 1 1 1 1
+0 0 0 0 1 1 1 1
+      { '×⎕'[1+0=#.db[⍵;;]] } 5
+⎕×××⎕⎕⎕⎕
+××××⎕⎕⎕⎕
+⎕⎕××⎕⎕⎕⎕
+××××⎕⎕⎕⎕
+      { ('mtwtf'[⍵]) ('×⎕'[1+0=#.db[⍵;;]]) } 5
+f ⎕×××⎕⎕⎕⎕
+  ××××⎕⎕⎕⎕
+  ⎕⎕××⎕⎕⎕⎕
+  ××××⎕⎕⎕⎕
+      { ('mtwtf'[⍵]) ((⍳2⊃⍴#.db),'×⎕'[1+0=#.db[⍵;;]]) } 5
+f 1 ⎕×××⎕⎕⎕⎕
+  2 ××××⎕⎕⎕⎕
+  3 ⎕⎕××⎕⎕⎕⎕
+  4 ××××⎕⎕⎕⎕
+#+END_EXAMPLE
+
+This seems to fit the bill for a good day printout!
+
+#+BEGIN_EXAMPLE
+     ⎕vr 'show_day'
+     ∇ show_day←{('mtwtf'[⍵])((⍳2⊃⍴#.db),'×⎕'[1+0=#.db[⍵;;]])}
+     ∇
+#+END_EXAMPLE
+
+Let's call this show_day and put it in the #.booking namespace!
+After saving, we can now try it out a bit.
+
+#+BEGIN_EXAMPLE
+      show_day 1
+m 1 ⎕⎕⎕⎕⎕⎕⎕⎕
+  2 ⎕⎕⎕⎕⎕⎕⎕⎕
+  3 ⎕⎕⎕⎕⎕⎕⎕⎕
+  4 ⎕⎕⎕⎕⎕⎕⎕⎕
+      show_day 4
+t 1 ⎕⎕⎕⎕⎕⎕⎕⎕
+  2 ⎕⎕⎕⎕⎕⎕⎕⎕
+  3 ⎕⎕⎕⎕⎕⎕⎕⎕
+  4 ⎕⎕⎕⎕⎕⎕⎕⎕
+      show_day ¨ ⍳5
+ m 1 ⎕⎕⎕⎕⎕⎕⎕⎕   t 1 ⎕⎕⎕⎕⎕⎕⎕⎕   w 1 ⎕⎕⎕⎕⎕⎕⎕⎕   t 1 ⎕⎕⎕⎕⎕⎕⎕⎕   f 1 ⎕×××⎕⎕⎕⎕
+   2 ⎕⎕⎕⎕⎕⎕⎕⎕     2 ⎕⎕⎕⎕⎕⎕⎕⎕     2 ⎕⎕⎕⎕⎕⎕⎕⎕     2 ⎕⎕⎕⎕⎕⎕⎕⎕     2 ××××⎕⎕⎕⎕
+   3 ⎕⎕⎕⎕⎕⎕⎕⎕     3 ⎕⎕⎕⎕⎕⎕⎕⎕     3 ⎕⎕⎕⎕⎕⎕⎕⎕     3 ⎕⎕⎕⎕⎕⎕⎕⎕     3 ⎕⎕××⎕⎕⎕⎕
+   4 ⎕⎕⎕⎕⎕⎕⎕⎕     4 ⎕⎕⎕⎕⎕⎕⎕⎕     4 ⎕⎕⎕⎕⎕⎕⎕⎕     4 ⎕⎕⎕⎕⎕⎕⎕⎕     4 ××××⎕⎕⎕⎕
+#+END_EXAMPLE
+
+however, we wanted one show function that also accept names, let's keep on it.
+The show function should then automatically do the ¨ if necessary and we must
+add support for the names of the days!
+
+** Demonstration
 Thus, we can now book, and unbook! A short demonstration is in order of the full flow.
 Starting of with db and bid initialization, then performing three different bookings.
 

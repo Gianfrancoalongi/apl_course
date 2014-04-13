@@ -17,5 +17,8 @@
     id←{⍵}
     with←{⍵}
     unbook←{(,#.db)[(,#.db=⍵)/⍳⍴,#.db]←0}
+    
+    all←⍳5
+    show_day←{ ('mtwtf'[⍵]) ((⍳2⊃⍴#.db),'×⎕'[1+0=#.db[⍵;;]]) }
 
 :EndNameSpace
