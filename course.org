@@ -509,7 +509,6 @@ function.
 
 
 
-
 ** Breaking the securer caesar cipher
 
 There is one thing that can be done to make the caesar cipher slightly trickier
@@ -1761,6 +1760,7 @@ f 1 ⎕×××⎕⎕⎕⎕
 #+END_EXAMPLE
 
 This seems to fit the bill for a good day printout!
+Let's call this show_day and put it in the #.booking namespace!
 
 #+BEGIN_EXAMPLE
      ⎕vr 'show_day'
@@ -1768,7 +1768,6 @@ This seems to fit the bill for a good day printout!
      ∇
 #+END_EXAMPLE
 
-Let's call this show_day and put it in the #.booking namespace!
 After saving, we can now try it out a bit.
 
 #+BEGIN_EXAMPLE
@@ -1791,7 +1790,71 @@ t 1 ⎕⎕⎕⎕⎕⎕⎕⎕
 
 however, we wanted one show function that also accept names, let's keep on it.
 The show function should then automatically do the ¨ if necessary and we must
-add support for the names of the days!
+add support for the names of the days! Adding day name support is easy, we already
+have friday, we just add the others (monday, tuesday, wednesday and thursday).
+
+#+BEGIN_EXAMPLE
+      monday tuesday wednesday thursday friday
+1 2 3 4 5
+      all
+1 2 3 4 5
+#+END_EXAMPLE
+
+The day names can now be used as expected
+
+#+BEGIN_EXAMPLE
+      show_day monday
+m 1 ⎕⎕⎕⎕⎕⎕⎕⎕
+  2 ⎕⎕⎕⎕⎕⎕⎕⎕
+  3 ⎕⎕⎕⎕⎕⎕⎕⎕
+  4 ⎕⎕⎕⎕⎕⎕⎕⎕
+      show_day friday
+f 1 ⎕×××⎕⎕⎕⎕
+  2 ××××⎕⎕⎕⎕
+  3 ⎕⎕××⎕⎕⎕⎕
+  4 ××××⎕⎕⎕⎕
+#+END_EXAMPLE
+
+however, the last adjustment is still to be made, the main function shall be 
+named show and accept single days, or an array of days. As it turns out, this
+is handled automatically!
+Look at the following
+
+#+BEGIN_EXAMPLE
+     show_day ¨ monday
+ m 1 ⎕⎕⎕⎕⎕⎕⎕⎕
+   2 ⎕⎕⎕⎕⎕⎕⎕⎕
+   3 ⎕⎕⎕⎕⎕⎕⎕⎕
+   4 ⎕⎕⎕⎕⎕⎕⎕⎕
+
+     show_day ¨ monday wednesday friday
+ m 1 ⎕⎕⎕⎕⎕⎕⎕⎕   w 1 ⎕⎕⎕⎕⎕⎕⎕⎕   f 1 ⎕×××⎕⎕⎕⎕
+   2 ⎕⎕⎕⎕⎕⎕⎕⎕     2 ⎕⎕⎕⎕⎕⎕⎕⎕     2 ××××⎕⎕⎕⎕
+   3 ⎕⎕⎕⎕⎕⎕⎕⎕     3 ⎕⎕⎕⎕⎕⎕⎕⎕     3 ⎕⎕××⎕⎕⎕⎕
+   4 ⎕⎕⎕⎕⎕⎕⎕⎕     4 ⎕⎕⎕⎕⎕⎕⎕⎕     4 ××××⎕⎕⎕⎕
+#+END_EXAMPLE
+
+Therefore, the show function can now be defined as
+
+:     ⎕vr 'show'
+:     ∇ show←{show_day¨⍵}
+:     ∇
+
+and it works as expected
+
+#+BEGIN_EXAMPLE
+      show monday
+ m 1 ⎕⎕⎕⎕⎕⎕⎕⎕
+   2 ⎕⎕⎕⎕⎕⎕⎕⎕
+   3 ⎕⎕⎕⎕⎕⎕⎕⎕
+   4 ⎕⎕⎕⎕⎕⎕⎕⎕
+
+      show monday friday
+ m 1 ⎕⎕⎕⎕⎕⎕⎕⎕   f 1 ⎕×××⎕⎕⎕⎕
+   2 ⎕⎕⎕⎕⎕⎕⎕⎕     2 ××××⎕⎕⎕⎕
+   3 ⎕⎕⎕⎕⎕⎕⎕⎕     3 ⎕⎕××⎕⎕⎕⎕
+   4 ⎕⎕⎕⎕⎕⎕⎕⎕     4 ××××⎕⎕⎕⎕
+#+END_EXAMPLE
 
 ** Demonstration
 Thus, we can now book, and unbook! A short demonstration is in order of the full flow.
@@ -1800,66 +1863,54 @@ Starting of with db and bid initialization, then performing three different book
 #+BEGIN_EXAMPLE
       init_db ⍬
       init_bid ⍬
-      book first free on friday for 3 from 2
+      book first free on monday for 4 from 2
 1
-      book first free on friday for 4 from 1
+      book first free on wednesday for 6 from 1
 2
-      book first free on friday for 2 from 3
+      book first free on friday for 5 from 2
 3
-      #.db
-0 0 0 0 0 0 0 0
-0 0 0 0 0 0 0 0
-0 0 0 0 0 0 0 0
-0 0 0 0 0 0 0 0
-
-0 0 0 0 0 0 0 0
-0 0 0 0 0 0 0 0
-0 0 0 0 0 0 0 0
-0 0 0 0 0 0 0 0
-
-0 0 0 0 0 0 0 0
-0 0 0 0 0 0 0 0
-0 0 0 0 0 0 0 0
-0 0 0 0 0 0 0 0
-
-0 0 0 0 0 0 0 0
-0 0 0 0 0 0 0 0
-0 0 0 0 0 0 0 0
-0 0 0 0 0 0 0 0
-
-0 1 1 1 0 0 0 0
-2 2 2 2 0 0 0 0
-0 0 3 3 0 0 0 0
-0 0 0 0 0 0 0 0
+      show all
+ m 1 ⎕××××⎕⎕⎕   t 1 ⎕⎕⎕⎕⎕⎕⎕⎕   w 1 ××××××⎕⎕   t 1 ⎕⎕⎕⎕⎕⎕⎕⎕   f 1 ⎕×××××⎕⎕
+   2 ⎕⎕⎕⎕⎕⎕⎕⎕     2 ⎕⎕⎕⎕⎕⎕⎕⎕     2 ⎕⎕⎕⎕⎕⎕⎕⎕     2 ⎕⎕⎕⎕⎕⎕⎕⎕     2 ⎕⎕⎕⎕⎕⎕⎕⎕
+   3 ⎕⎕⎕⎕⎕⎕⎕⎕     3 ⎕⎕⎕⎕⎕⎕⎕⎕     3 ⎕⎕⎕⎕⎕⎕⎕⎕     3 ⎕⎕⎕⎕⎕⎕⎕⎕     3 ⎕⎕⎕⎕⎕⎕⎕⎕
+   4 ⎕⎕⎕⎕⎕⎕⎕⎕     4 ⎕⎕⎕⎕⎕⎕⎕⎕     4 ⎕⎕⎕⎕⎕⎕⎕⎕     4 ⎕⎕⎕⎕⎕⎕⎕⎕     4 ⎕⎕⎕⎕⎕⎕⎕⎕
+      book first free on friday for 3 from 2
+4
+      show friday
+ f 1 ⎕×××××⎕⎕
+   2 ⎕×××⎕⎕⎕⎕
+   3 ⎕⎕⎕⎕⎕⎕⎕⎕
+   4 ⎕⎕⎕⎕⎕⎕⎕⎕
 #+END_EXAMPLE
 
-Next, we will unbook the booking with bid 2.
+Next, we will do successive unbooks and show the results
 
 #+BEGIN_EXAMPLE
-      unbook with id 2
-      #.db
-0 0 0 0 0 0 0 0
-0 0 0 0 0 0 0 0
-0 0 0 0 0 0 0 0
-0 0 0 0 0 0 0 0
+     unbook with id 2
+     show all
+ m 1 ⎕××××⎕⎕⎕   t 1 ⎕⎕⎕⎕⎕⎕⎕⎕   w 1 ⎕⎕⎕⎕⎕⎕⎕⎕   t 1 ⎕⎕⎕⎕⎕⎕⎕⎕   f 1 ⎕×××××⎕⎕
+   2 ⎕⎕⎕⎕⎕⎕⎕⎕     2 ⎕⎕⎕⎕⎕⎕⎕⎕     2 ⎕⎕⎕⎕⎕⎕⎕⎕     2 ⎕⎕⎕⎕⎕⎕⎕⎕     2 ⎕×××⎕⎕⎕⎕
+   3 ⎕⎕⎕⎕⎕⎕⎕⎕     3 ⎕⎕⎕⎕⎕⎕⎕⎕     3 ⎕⎕⎕⎕⎕⎕⎕⎕     3 ⎕⎕⎕⎕⎕⎕⎕⎕     3 ⎕⎕⎕⎕⎕⎕⎕⎕
+   4 ⎕⎕⎕⎕⎕⎕⎕⎕     4 ⎕⎕⎕⎕⎕⎕⎕⎕     4 ⎕⎕⎕⎕⎕⎕⎕⎕     4 ⎕⎕⎕⎕⎕⎕⎕⎕     4 ⎕⎕⎕⎕⎕⎕⎕⎕
 
-0 0 0 0 0 0 0 0
-0 0 0 0 0 0 0 0
-0 0 0 0 0 0 0 0
-0 0 0 0 0 0 0 0
+     unbook with id 4
+     show all
+ m 1 ⎕××××⎕⎕⎕   t 1 ⎕⎕⎕⎕⎕⎕⎕⎕   w 1 ⎕⎕⎕⎕⎕⎕⎕⎕   t 1 ⎕⎕⎕⎕⎕⎕⎕⎕   f 1 ⎕×××××⎕⎕
+   2 ⎕⎕⎕⎕⎕⎕⎕⎕     2 ⎕⎕⎕⎕⎕⎕⎕⎕     2 ⎕⎕⎕⎕⎕⎕⎕⎕     2 ⎕⎕⎕⎕⎕⎕⎕⎕     2 ⎕⎕⎕⎕⎕⎕⎕⎕
+   3 ⎕⎕⎕⎕⎕⎕⎕⎕     3 ⎕⎕⎕⎕⎕⎕⎕⎕     3 ⎕⎕⎕⎕⎕⎕⎕⎕     3 ⎕⎕⎕⎕⎕⎕⎕⎕     3 ⎕⎕⎕⎕⎕⎕⎕⎕
+   4 ⎕⎕⎕⎕⎕⎕⎕⎕     4 ⎕⎕⎕⎕⎕⎕⎕⎕     4 ⎕⎕⎕⎕⎕⎕⎕⎕     4 ⎕⎕⎕⎕⎕⎕⎕⎕     4 ⎕⎕⎕⎕⎕⎕⎕⎕
 
-0 0 0 0 0 0 0 0
-0 0 0 0 0 0 0 0
-0 0 0 0 0 0 0 0
-0 0 0 0 0 0 0 0
+      unbook with id 3
+      show all
+ m 1 ⎕××××⎕⎕⎕   t 1 ⎕⎕⎕⎕⎕⎕⎕⎕   w 1 ⎕⎕⎕⎕⎕⎕⎕⎕   t 1 ⎕⎕⎕⎕⎕⎕⎕⎕   f 1 ⎕⎕⎕⎕⎕⎕⎕⎕
+   2 ⎕⎕⎕⎕⎕⎕⎕⎕     2 ⎕⎕⎕⎕⎕⎕⎕⎕     2 ⎕⎕⎕⎕⎕⎕⎕⎕     2 ⎕⎕⎕⎕⎕⎕⎕⎕     2 ⎕⎕⎕⎕⎕⎕⎕⎕
+   3 ⎕⎕⎕⎕⎕⎕⎕⎕     3 ⎕⎕⎕⎕⎕⎕⎕⎕     3 ⎕⎕⎕⎕⎕⎕⎕⎕     3 ⎕⎕⎕⎕⎕⎕⎕⎕     3 ⎕⎕⎕⎕⎕⎕⎕⎕
+   4 ⎕⎕⎕⎕⎕⎕⎕⎕     4 ⎕⎕⎕⎕⎕⎕⎕⎕     4 ⎕⎕⎕⎕⎕⎕⎕⎕     4 ⎕⎕⎕⎕⎕⎕⎕⎕     4 ⎕⎕⎕⎕⎕⎕⎕⎕
 
-0 0 0 0 0 0 0 0
-0 0 0 0 0 0 0 0
-0 0 0 0 0 0 0 0
-0 0 0 0 0 0 0 0
-
-0 1 1 1 0 0 0 0
-0 0 0 0 0 0 0 0
-0 0 3 3 0 0 0 0
-0 0 0 0 0 0 0 0
+      unbook with id 1
+      show all
+ m 1 ⎕⎕⎕⎕⎕⎕⎕⎕   t 1 ⎕⎕⎕⎕⎕⎕⎕⎕   w 1 ⎕⎕⎕⎕⎕⎕⎕⎕   t 1 ⎕⎕⎕⎕⎕⎕⎕⎕   f 1 ⎕⎕⎕⎕⎕⎕⎕⎕
+   2 ⎕⎕⎕⎕⎕⎕⎕⎕     2 ⎕⎕⎕⎕⎕⎕⎕⎕     2 ⎕⎕⎕⎕⎕⎕⎕⎕     2 ⎕⎕⎕⎕⎕⎕⎕⎕     2 ⎕⎕⎕⎕⎕⎕⎕⎕
+   3 ⎕⎕⎕⎕⎕⎕⎕⎕     3 ⎕⎕⎕⎕⎕⎕⎕⎕     3 ⎕⎕⎕⎕⎕⎕⎕⎕     3 ⎕⎕⎕⎕⎕⎕⎕⎕     3 ⎕⎕⎕⎕⎕⎕⎕⎕
+   4 ⎕⎕⎕⎕⎕⎕⎕⎕     4 ⎕⎕⎕⎕⎕⎕⎕⎕     4 ⎕⎕⎕⎕⎕⎕⎕⎕     4 ⎕⎕⎕⎕⎕⎕⎕⎕     4 ⎕⎕⎕⎕⎕⎕⎕⎕
 #+END_EXAMPLE

@@ -4,7 +4,6 @@
     from←{⍺,(¯1+⍵)↓⍳8}
     for←{⍺,(⊃⍵)↑1↓⍵}
     on←{⍵}
-    friday←5
       free←{ba←0=+/#.db[⊃⍵;;1↓⍵]
           r←ba/⍳2⊃⍴#.db
           (⊂r),⍵}
@@ -17,8 +16,14 @@
     id←{⍵}
     with←{⍵}
     unbook←{(,#.db)[(,#.db=⍵)/⍳⍴,#.db]←0}
-    
+          
+    show←{ show_day ¨ ⍵ }
     all←⍳5
     show_day←{ ('mtwtf'[⍵]) ((⍳2⊃⍴#.db),'×⎕'[1+0=#.db[⍵;;]]) }
+    monday←1
+    tuesday←2
+    wednesday←3
+    thursday←4
+    friday←5
 
 :EndNameSpace
