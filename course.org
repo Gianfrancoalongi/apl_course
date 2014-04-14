@@ -1949,4 +1949,54 @@ it looks like this
 :EndNameSpace
 #+END_EXAMPLE
 
+* Test Result Report Analysis
+** Test Result Report Tables
+Test resulst reports come in many shapes and forms. 
+Not only can they be immediately useful to prove correctness and functionality, 
+but storing historical test results can give us large amounts of data which we 
+can analyze in order to gain understanding of our systems.
+When enriching the usual test result reports with additional data, such as 
+component changes, hostnames and usernames, we can gain a lot of insight.
+Let us look at the most basic test result report, listing test name and result
+from the last execution.
+
+Test result reports are always easier to read when in tabulated form, so we
+shall create one such table with the use of 'strand notation' and 'mix'.
+
+#+BEGIN_EXAMPLE
+     ('test 1' 1) ('test 2' 0) ('test 3' 1)
+  test 1  1   test 2  0   test 3  1
+#+END_EXAMPLE
+
+Strand notation allows us to construct arrays by juxtaposition of elements.
+What you see above is strand notation of 3 arrays, each array contains 2
+elements, a text-array and a number.
+
+We can 'mix' ↑ this result to create a matrix with 3 rows and 2 columns.
+'shape' ⍴ returns the dimensions of the right argument.
+
+#+BEGIN_EXAMPLE
+     ↑ ('test 1' 1) ('test 2' 0) ('test 3' 1)
+ test 1  1
+ test 2  0
+ test 3  1
+     ⍴ ↑ ('test 1' 1) ('test 2' 0) ('test 3' 1)
+3 2
+#+END_EXAMPLE
+
+Another name for this is a table, so we name it with a more adequate name.
+Note how I select the first column of all rows using the [;1] notation.
+
+#+BEGIN_EXAMPLE
+     table ← ↑ ('test 1' 1) ('test 2' 0) ('test 3' 1)
+     table[;1]
+ test 1  test 2  test 3
+     ↑ table[;1]
+test 1
+test 2
+test 3
+#+END_EXAMPLE
+
+** Reading A Test Result Report from file
+
 
