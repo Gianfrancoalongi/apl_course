@@ -2019,13 +2019,152 @@ by using negative 50.
 mokraterna,..,..,..,..,..,..,..,..,20,75,334,827
 #+END_EXAMPLE
 
-
+** Parsing the contents of the file
 We can now move on to parsing this and doing something useful with the
-contents.
-The interesting thing to realize now, is that the text array in content
-contains all characters, including the carriage return character \n 
-which has ASCII code 13.
+contents. The interesting thing to realize now, is that the text array 
+in content contains all characters, including the carriage return character \n 
+which has ASCII code 13. We can use the Unicode Convert function =⎕UCS= to 
+recreate any character based on it's numeric code, and thus, we can match
+all carriage returns with (⎕UCS 13), allowing us to count the amount of
+newlines in the file.
 
+#+BEGIN_EXAMPLE
+      +/ contents = ⎕UCS 13
+2329
+#+END_EXAMPLE
+
+notice that we plus-reduce the result from the comparison as we get a binary
+array and wish to count the amount of ones. We can see this middle step
+visually by performing the same comparison on the 20 first characters
+from offset 70 in the text-array.
+
+#+BEGIN_EXAMPLE
+      contents[70+⍳20]=⎕UCS 13
+0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+#+END_EXAMPLE
+
+The 1 indicates a carriage return character matched at position 76, which we
+can verify by indexing this element and using =⎕UCS= to display the ascii
+code for it.
+
+#+BEGIN_EXAMPLE
+      ⎕UCS contents[76]
+13
+#+END_EXAMPLE
+
+We can use what we have seen, together with =⎕ML←3= to break the contents
+into lines, this is usually what you want to do when reading a file and 
+parsing it.
+
+#+BEGIN_EXAMPLE
+      ⍴ { ⎕ML←3 ⋄ lines←(contents≠⎕UCS 13)⊂contents ⋄ lines } ⍬
+2330
+#+END_EXAMPLE
+
+I will go through the code inside the dynamic function (inside the { }'s) briefly, 
+line by line (remember that ⋄ is a line separator). 
+
+: ⎕ML←3  
+
+This sets the Migration Level to 3, the Migration Level allows compatibility
+with other dialects of Dyalog APL, and it just to happens that in Migration Level 3,
+we can split arrays based on a binary array in a very convenient way.
+
+: lines←(contents≠⎕UCS 13)⊂contents
+
+here we split the text array based on the binary array which is the result of 
+finding all non-carriage returns. Every array element will now be text arrays
+between the carriage returns - i.e the lines.
+
+: lines
+
+This just returns the array of text-arrays. Note that I count the amount
+of elements by using shape =⍴=. We might as well extract the second line
+instead, by using 'pick' =⊃= with 2.
+
+#+BEGIN_EXAMPLE
+      2⊃ { ⎕ML←3 ⋄ lines←(contents≠⎕UCS 13)⊂contents ⋄ lines } ⍬
+
+0114 Upplands Väsby,Moderaterna,1918,2678,3860,5197,4978,4364,5831,.....
+#+END_EXAMPLE
+
+Let us assign this result to lines and count them using shape ⍴.
+
+#+BEGIN_EXAMPLE
+      lines ← { ⎕ML←3 ⋄ lines←(contents≠⎕UCS 13)⊂contents ⋄ lines } ⍬
+      ⍴lines
+2330
+#+END_EXAMPLE
+
+Next, we wish to parse one line, each line consisting of a municipality
+code and the name of the municipality, followed by the swedish party name
+and the amount of votes for this party during the different years.
+We can thus split the input, but based on comma this time, using =⎕ML←3=.
+I will turn on boxing which makes it easy to see the resulting arrays.
+
+#+BEGIN_EXAMPLE
+      ]box on
+Was OFF
+#+END_EXAMPLE
+
+I forgot to tell you that setting =⎕ML←3= inside the dynamic function 
+will ensure that the Migration Level is only changed within that execution
+environment and will not change the Migration Level outside of the dynamic
+function. The following example pick's =⊃= the second array element from lines
+and then splits the line on comma.
+
+#+BEGIN_EXAMPLE
+      { ⎕ML←3 ⋄ (⍵≠',')⊂⍵ } 2⊃lines
+┌→──────────────────┬───────────┬────┬────┬────┬────┬────┬────┬────┬────┬────┬────┬────┬────┐
+│                   │Moderaterna│1918│2678│3860│5197│4978│4364│5831│5782│5901│3822│7326│8397│
+│0114 Upplands Väsby│           │    │    │    │    │    │    │    │    │    │    │    │    │
+└──────────────────→┴──────────→┴───→┴───→┴───→┴───→┴───→┴───→┴───→┴───→┴───→┴───→┴───→┴───→┘
+
+      ⍴ { ⎕ML←3 ⋄ (⍵≠',')⊂⍵ } 2⊃lines
+14
+#+END_EXAMPLE
+
+As we can see, we get a 14 element array from splitting a line into words, based on comma ','
+as the separator. Let us now assign this dynamic function to =split_words=
+
+#+BEGIN_EXAMPLE
+      split_words ← { ⎕ML←3 ⋄ (⍵≠',')⊂⍵ }
+      split_words
+{⎕ML←3 ⋄ (⍵≠',')⊂⍵}
+#+END_EXAMPLE
+
+But this is not really enough, we need to convert vote amounts into integers from text
+arrays which they are now. We can actually see how different things are represented
+internally in Dyalog APL by using 'data representation' =⎕DR=, let us observe the results
+for floating points numbers, integer, integer array and a matrix.
+
+#+BEGIN_EXAMPLE
+      ]box on
+Was OFF
+
+      0.1 1 (⍳4) (2 2⍴⍳4)
+┌→──┬─┬───────┬───┐
+│0.1│1│1 2 3 4│1 2│
+│   │ │       │3 4↓
+└~──┴─┴~─────→┴~─→┘
+
+      ⎕dr ¨ 0.1 1 (⍳4) (2 2⍴⍳4)
+645 83 83 83
+#+END_EXAMPLE
+
+continually, let us look at the result of =⎕DR= on a single character, a text array
+and a text matrix.
+
+#+BEGIN_EXAMPLE
+      (⎕ucs 97) 'textarray' (2 5 ⍴ 'textmatrix')
+┌→┬─────────┬─────┐
+│a│textarray│textm│
+│ │         │atrix↓
+└─┴────────→┴────→┘
+
+      ⎕DR ¨ (⎕ucs 97) 'textarray' (2 5 ⍴ 'textmatrix')
+80 80 80
+#+END_EXAMPLE
 
 
 * Test Result Report Analysis
