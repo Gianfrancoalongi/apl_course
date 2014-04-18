@@ -1979,6 +1979,63 @@ It contains 2329 lines of data on 8 swedish parties and how different
 swedish municipalities voted on these parties through the years 
 1973,1976,1979,1982,1985,1988,1991,1994,1998,2002,2006,2010.
 
+** Create the SALT Script from within the Dyalog APL environment
+In the Chapter 'A Tiny Booking DSL', we created the SALT script from outside
+the Dyalog APL environment and then loaded it using =⎕SE.SALT.Load=.
+We do not need to leave the environment at all, and can do the same thing
+from within, let us look at how.
+
+We start by creating the 'analysis' namespace by using the 'namespace' system
+command, =)ns= command and supplying the name 'analysis'. We check that the namespace
+is created by listing the namespaces afterwards, using =⎕NL 9=.
+
+#+BEGIN_EXAMPLE
+      )ns analysis
+#.analysis
+
+      ⎕NL 9
+analysis
+#+END_EXAMPLE
+
+We can now save this (now empty) namespace into a Dyalog SALT script, by using
+=⎕SE.SALT.Save= with the =-convert= option as follows (note that the option is given
+as part of the same text array in which the target SALT script name is given).
+
+#+BEGIN_EXAMPLE
+      ⎕SE.SALT.Save #.analysis './analysis.dyalog -convert'
+/home/gianfranco/APL/analysis.dyalog
+#+END_EXAMPLE
+
+If we now edit the =#.analysis= namespace in the Dyalog APL environment, we will
+notice that it looks like a proper SALT script as follows.
+
+#+BEGIN_EXAMPLE
+    :NameSpace analysis
+         ⎕IO ⎕ML ⎕WX ← 1 1 3
+
+    :EndNameSpace 
+#+END_EXAMPLE
+
+The first line of Dyalog APL code 
+
+:  ⎕IO ⎕ML ⎕WX ← 1 1 3
+
+is actually no more special than an array strand notation assignment.
+We can do this ourselves in the shell in the following way 
+
+#+BEGIN_EXAMPLE
+      a b c ← 1 (1 2 3) 2
+      a
+1
+      b
+1 2 3
+      c
+2
+#+END_EXAMPLE
+
+From now on, all functions will be added to the =#.analysis= namespace, so 
+we can save our work in a proper version control system. 
+
 ** Opening a file for reading
 The file we will work on is located in this course directory, it is called
 ME0104B6.csv, let us start by 'tieing' the file.  Tieing the file creates
