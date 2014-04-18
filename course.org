@@ -1972,7 +1972,7 @@ it looks like this
 :EndNameSpace
 #+END_EXAMPLE
 
-* Voting Analysis in Swedish Municipalities
+* Voting Analysis of Swedish Municipalities
 We will now read a CSV (Comma Separated Values) file which I downloaded
 from SCB (Statistiska Centralbyran; the swedish statistics bureau). 
 It contains 2329 lines of data on 8 swedish parties and how different
@@ -2190,4 +2190,6 @@ and a text matrix.
 #+END_EXAMPLE
 
 Let us now use this new-gained knowledge and interpret the different words which 
-is the result 
+are the result of =split_words= applied to each line.
+
+
