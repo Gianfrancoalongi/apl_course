@@ -73,14 +73,14 @@ So, reading the original expression
 
 :  ~  2|  5 5 ⍴ ⍳ 25
 
-from right to left, we generate all numbers from 1 to 25. We reform
+from right to left, we generate all numbers from 1 to 25. We then reshape
 this sequence into a 5 5 matrix and then do modulo 2 on all numbers
 of this matrix, and finally invert it.
 See? It was easy!
 
 
 I will expect you to do this kind of fearless trials in the Dyalog APL 
-environment, prodding and squashing expressions when you don't understand them.
+environment, prodding and observing expressions when you don't understand them.
 Exploring solutions and the data in the Dyalog APL environment is a very natural
 and normal way for APL developers to work. 
 
