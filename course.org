@@ -2145,6 +2145,61 @@ by using negative 50.
 mokraterna,..,..,..,..,..,..,..,..,20,75,334,827
 #+END_EXAMPLE
 
+We untie the tie with =⎕nuntie= as follows.
+
+#+BEGIN_EXAMPLE
+       ⎕nuntie tie
+#+END_EXAMPLE
+
+As we are not so interested in the tie (the filedescriptor), but the contents
+of the file, we put the tieing, reading and untieing into a function and just 
+get the contents of the file.
+
+We will now write our first User Defined Function, it will be called =read_file=
+and accept the filepath as the right argument, it will be written inside the
+analysis namespace (write #.analysis and press Ctrl-e to edit). As usual, I will
+show what the result looks like when I am done, using vector representation =⎕vr=.
+
+#+BEGIN_EXAMPLE
+      ⎕vr '#.analysis.read_file'
+     ∇ Z←read_file path;tie
+[1]    tie←path ⎕NTIE 0
+[2]    Z←⎕NREAD tie 80(⎕NSIZE tie)0
+[3]    ⎕NUNTIE tie
+     ∇
+#+END_EXAMPLE
+
+As this is the first time you see the User Defined Function format, I will 
+mention some interesting aspects. All User Defined Functions start and end with a line
+starting with 'del' (also known as carrot) =∇=. After this we show which variable
+(if any) will hold the return value, in this case =Z= will be assigned the return value
+of this function. Next on the same line as the first carrot, we have the function name,
+which is =read_file=, after this follows the argument name (if any), which is =path=.
+An optional variable declaration list comes after this, which is preceeded by semicolon
+=;=.
+
+#+BEGIN_EXAMPLE     
+     Return variable declaration
+       |      Function name
+       |        |      Function argument
+       |        |       |   Internal variable declaration
+       ↓        ↓       ↓    ↓
+     ∇ Z←  read_file  path ;tie
+#+END_EXAMPLE
+
+We check that the function is sound by invoking it with the path to the voting data.
+And putting the result into content and measuring it (do not print it to the screen!)
+
+#+BEGIN_EXAMPLE
+      content←#.analysis.read_file './ME0104B6.csv'
+      ⍴content
+188962
+      10↑content
+region,par
+#+END_EXAMPLE
+
+This is working well.
+
 ** Parsing the contents of the file
 We can now move on to parsing this and doing something useful with the
 contents. The interesting thing to realize now, is that the text array 
