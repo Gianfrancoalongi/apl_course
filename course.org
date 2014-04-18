@@ -1986,7 +1986,7 @@ We do not need to leave the environment at all, and can do the same thing
 from within, let us look at how.
 
 We start by creating the 'analysis' namespace by using the 'namespace' system
-command, =)ns= command and supplying the name 'analysis'. We check that the namespace
+command =)ns= and supplying the name 'analysis'. We check that the namespace
 is created by listing the namespaces afterwards, using =⎕NL 9=.
 
 #+BEGIN_EXAMPLE
@@ -2033,8 +2033,54 @@ We can do this ourselves in the shell in the following way
 2
 #+END_EXAMPLE
 
+Let me take a brief moment and explain the two most interesting system
+properties first (=⎕IO= and =⎕ML=).
+
+: ⎕IO 
+
+'Quad IO' is the index origin, meaning, which will be the origin when indexing
+and generating sequences. We can try changing it briefly and generating different
+sequences with iota =⍳=.
+
+#+BEGIN_EXAMPLE
+      { ⎕IO←0 ⋄ ⍳ 5 } ⍬
+0 1 2 3 4
+      { ⎕IO←1 ⋄ ⍳ 5 } ⍬
+1 2 3 4 5
+#+END_EXAMPLE
+
+We can also see the effect when indexing a text array, with the array 1 2 3.
+
+#+BEGIN_EXAMPLE
+      { ⎕IO←0 ⋄ 'quad-io'[ 1 2 3 ] } ⍬
+uad
+      { ⎕IO←1 ⋄ 'quad-io'[ 1 2 3 ] } ⍬
+qua
+#+END_EXAMPLE
+
+APL developers can go to great lengths in religious battles regarding =⎕IO←1=
+or =⎕IO←0=. However, the Dyalog APL standard is =⎕IO←1=.
+
+: ⎕ML
+
+'Quad ML' is the Migration Level of the Dyalog APL system. The Migration Level
+can be changed to support different dialects of APL. Changing the Migration Level
+from 1, will change the way some functions work. We will use =⎕ML←3= later when
+splitting arrays based on a token element. 
+
 From now on, all functions will be added to the =#.analysis= namespace, so 
 we can save our work in a proper version control system. 
+
+But just to convince yourself that all is good, take a brief look at the
+analysis.dyalog file outside of the Dyalog APL environment.
+
+#+BEGIN_EXAMPLE
+> cat analysis.dyalog
+:Namespace analysis
+⎕IO ⎕ML ⎕WX←1 1 3
+
+:EndNamespace
+#+END_EXAMPLE
 
 ** Opening a file for reading
 The file we will work on is located in this course directory, it is called
