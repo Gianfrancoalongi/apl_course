@@ -1949,6 +1949,85 @@ it looks like this
 :EndNameSpace
 #+END_EXAMPLE
 
+* Voting Analysis in Swedish Municipalities
+We will now read a CSV (Comma Separated Values) file which I downloaded
+from SCB (Statistiska Centralbyran; the swedish statistics bureau). 
+It contains 2329 lines of data on 8 swedish parties and how different
+swedish municipalities voted on these parties through the years 
+1973,1976,1979,1982,1985,1988,1991,1994,1998,2002,2006,2010.
+
+** Opening a file for reading
+The file we will work on is located in this course directory, it is called
+ME0104B6.csv, let us start by 'tieing' the file.  Tieing the file creates
+what can be thought of as a file descriptor, with which we can read from 
+and write to the file, we use =⎕ntie= for tieing the file.
+
+#+BEGIN_EXAMPLE
+      tie←'./ME0104B6.csv' ⎕ntie 0
+      tie
+¯1
+#+END_EXAMPLE
+
+The =¯1= indicates that this is a so called 'native file'. Native files
+refer to non-Dyalog APL files, another type of files which Dyalog APL 
+can work with, is so called Object Files which can contain Dyalog APL 
+objects. We can now query the size of the file we are tied to.
+This is done using =⎕nsize=, this is the amount of bytes in the file.
+
+#+BEGIN_EXAMPLE
+      ⎕nsize tie
+188962
+#+END_EXAMPLE
+
+contrast this with the size reported in the os when listing the file.
+
+#+BEGIN_EXAMPLE
+ > ls -l ME0104B6.csv
+-rw-rw-r-- 1 gianfranco gianfranco 188962 Apr 15 21:55 ME0104B6.csv
+#+END_EXAMPLE
+
+Reading from this tie is done by using =⎕nread=, =⎕nread= supports
+a very wide range of options, allowing you to perform very sophisticated
+reads where the encoding is to be interpreted in multiple ways.
+For the 'run of the mill' standard file reading, you want the
+options as seen below. tie is the tie to the file, 80 is to read the
+characters and interpret them as one byte per character, (⎕nsize tie)
+indicates the size of the file we are tied to, and 0 is to start from 
+offset 0. 
+
+#+BEGIN_EXAMPLE
+      contents←⎕NREAD tie 80(⎕NSIZE tie)0
+      ⍴ contents
+188962
+#+END_EXAMPLE
+
+Thus, we just read the whole content of the file, starting from offset 0,
+and interpreting all bytes as single characters, and we put this into 
+the variable contents, which now holds a text array of length 188962.
+We can look at the first 50 characters of this text array.
+
+#+BEGIN_EXAMPLE
+     50 ↑ contents
+region,parti mm,1973,1976,1979,1982,1985,1988,1991
+#+END_EXAMPLE
+
+we can also look at the last 50 characters of this text array, this is done
+by using negative 50.
+
+#+BEGIN_EXAMPLE
+     ¯50 ↑ contents
+mokraterna,..,..,..,..,..,..,..,..,20,75,334,827
+#+END_EXAMPLE
+
+
+We can now move on to parsing this and doing something useful with the
+contents.
+The interesting thing to realize now, is that the text array in content
+contains all characters, including the carriage return character \n 
+which has ASCII code 13.
+
+
+
 * Test Result Report Analysis
 ** Test Result Report Tables
 Test resulst reports come in many shapes and forms. 
@@ -1998,5 +2077,41 @@ test 3
 #+END_EXAMPLE
 
 ** Reading A Test Result Report from file
+However, in Real Life (TM) we will most likely receive a Test Result Report (TRR)
+from a system. And this will most likely be in a file.
+Let us therefore look at how to work with files and read/parse/analyze TRRs from 
+files. In the directory files/ you will find a TRR named sele_2014_04.trr containing 
+(column by column), test name, result (pass/fail), host it was executed on, subsystems 
+that changed since last run and usernames of developers who made those changes.
+
+      names
+ t1  t2  t3  t4
+      hosts
+ h1  h2  h3
+      systems
+ s1  s2  s3  s4
+      users
+ u1  u2  u3  u4
+
+      system_affects_test← {(? 4) ? 4} ¨ ⍳⍴systems
+      system_affects_test
+┌→────┬───────┬───────┬─┐
+│4 3 2│1 4 2 3│2 4 3 1│4│
+└~───→┴~─────→┴~─────→┴→┘
+
+      user_affects_system← {(?4) ? 4 } ¨⍳⍴users
+      user_affects_system
+┌→────┬───┬─┬───┐
+│3 1 4│4 1│3│4 2│
+└~───→┴~─→┴→┴~─→┘
+
+      hosts_affect_tests←{? 4}¨⍳⍴hosts
+      hosts_affect_tests
+2 4 3
+
+
+
+
+
 
 
