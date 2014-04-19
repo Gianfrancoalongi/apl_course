@@ -159,7 +159,7 @@ This is easily done with the 'circle stile' (rotate) ⌽.
  ∇rotate
 #+END_EXAMPLE
 
-Now, try invoking the dynamic function (d-fn) rotate which we just defined.
+Now, try invoking the direct function (d-fn) rotate which we just defined.
 
 #+BEGIN_EXAMPLE
       rotate 0
@@ -653,7 +653,7 @@ by the length of the text in question.
 0.2 0.06666666667 0.1 0 0 0.03333333333 0 0 0.03333333333 0 0 0.1 0 0.03333333333......
 #+END_EXAMPLE
 
-We can now put this into a dynamic function (d-fn) and amaze at the conciseness.
+We can now put this into a direct function (d-fn) and amaze at the conciseness.
 
 #+BEGIN_EXAMPLE
       frequency ← { (+/↑alfabet∘.=⊂⍵)÷⍴⍵ }
@@ -1024,7 +1024,7 @@ by opening it with our favourite editor, or just doing less on it.
 :EndNameSpace
 #+END_EXAMPLE
 
-We have now assigned the dynamic function to init_db in #.booking.
+We have now assigned the direct function to init_db in #.booking.
 We can check that the d-fn has been defined by listing the available functions
 in the #.booking namespace using ⎕NL 3 from within the #.booking namespace
 
@@ -1322,7 +1322,7 @@ with two submatrices nullified.
 
 Now I want to find the expression that returns the indices of the rows in the second
 submatrix for which the columns 2 3 4 are all zero. First, let us pass the same kind
-of data =2 2 3 4= to tour dynamic function as we get from our chain expression.
+of data =2 2 3 4= to tour direct function as we get from our chain expression.
 We start by selecting the second submatrix, and all the interesting columns.
 
 #+BEGIN_EXAMPLE
@@ -1355,7 +1355,7 @@ which is the second dimension of the cube - using ⍳.
 
 and this is it, this will be our new function we will add to #.booking, however,
 we wish to pass this result together with all the other data, so we should put
-this at the front of the data we got. I defined the dynamic function on multiple
+this at the front of the data we got. I defined the direct function on multiple
 lines as it becomes more readable with variable assignments of intermedia results.
 
 :     ⎕vr 'free'
@@ -2147,9 +2147,7 @@ mokraterna,..,..,..,..,..,..,..,..,20,75,334,827
 
 We untie the tie with =⎕nuntie= as follows.
 
-#+BEGIN_EXAMPLE
-       ⎕nuntie tie
-#+END_EXAMPLE
+:    ⎕nuntie tie
 
 As we are not so interested in the tie (the filedescriptor), but the contents
 of the file, we put the tieing, reading and untieing into a function and just 
@@ -2188,19 +2186,34 @@ An optional variable declaration list comes after this, which is preceeded by se
 #+END_EXAMPLE
 
 We check that the function is sound by invoking it with the path to the voting data.
-And putting the result into content and measuring it (do not print it to the screen!)
+And putting the result into content and inquiring the dimension of the text array by
+using shape (rho) =⍴= (do not print it to the screen!).
 
 #+BEGIN_EXAMPLE
-      content←#.analysis.read_file './ME0104B6.csv'
-      ⍴content
+      contents←#.analysis.read_file './ME0104B6.csv'
+      ⍴contents
 188962
-      10↑content
+      10↑contents
 region,par
 #+END_EXAMPLE
 
-This is working well.
+This seems to work well. The SALT script analysis.dyalog now contains the following
+when we look at it from outside the Dyalog APL environment.
 
-** Parsing the contents of the file
+#+BEGIN_EXAMPLE
+:Namespace analysis
+    ⎕IO ⎕ML ⎕WX←1 1 3
+
+    ∇ Z←read_file path;tie
+      tie←path ⎕NTIE 0
+      Z←⎕NREAD tie 80(⎕NSIZE tie)0
+      ⎕NUNTIE tie
+    ∇
+
+:EndNamespace
+#+END_EXAMPLE
+
+** Parsing contents into lines
 We can now move on to parsing this and doing something useful with the
 contents. The interesting thing to realize now, is that the text array 
 in content contains all characters, including the carriage return character \n 
@@ -2233,31 +2246,31 @@ code for it.
 13
 #+END_EXAMPLE
 
-We can use what we have seen, together with =⎕ML←3= to break the contents
-into lines, this is usually what you want to do when reading a file and 
-parsing it.
+We can use what we have seen, together with 'partition' =⊂= from =⎕ML←3= to 
+break the contents into lines, this is usually what you want to do when reading 
+a file and parsing it.
 
 #+BEGIN_EXAMPLE
       ⍴ { ⎕ML←3 ⋄ lines←(contents≠⎕UCS 13)⊂contents ⋄ lines } ⍬
 2330
 #+END_EXAMPLE
 
-I will go through the code inside the dynamic function (inside the { }'s) briefly, 
-line by line (remember that ⋄ is a line separator). 
+I will go through the code inside the direct function (inside the { }'s) briefly, 
+line by line (remember that 'diamond' =⋄= is a line separator). 
 
-: ⎕ML←3  
+:    ⎕ML←3  
 
-This sets the Migration Level to 3, the Migration Level allows compatibility
-with other dialects of Dyalog APL, and it just to happens that in Migration Level 3,
-we can split arrays based on a binary array in a very convenient way.
+This sets the Migration Level to 3. At Migration Level 3, we have access to the 
+IBM definition of =⊂= called 'partition', which is very convenient for splitting
+arrays.
 
-: lines←(contents≠⎕UCS 13)⊂contents
+:    lines←(contents≠⎕UCS 13)⊂contents
 
 here we split the text array based on the binary array which is the result of 
 finding all non-carriage returns. Every array element will now be text arrays
 between the carriage returns - i.e the lines.
 
-: lines
+:    lines
 
 This just returns the array of text-arrays. Note that I count the amount
 of elements by using shape =⍴=. We might as well extract the second line
@@ -2277,6 +2290,49 @@ Let us assign this result to lines and count them using shape ⍴.
 2330
 #+END_EXAMPLE
 
+As we now seem to have a direct function for parsing file contents into single
+lines, we should save this into the =#.analysis= namespace with a proper name.
+I propose to name the function =lines=. Just to make the direct function more
+readable it will be a so called multilne direct function (a direct function 
+across multiple lines).
+
+#+BEGIN_EXAMPLE
+      ⎕vr '#.analysis.lines'
+     ∇ lines←{⎕ML←3
+[1]        (⍵≠(⎕UCS 13))⊂⍵
+[2]    }
+     ∇
+#+END_EXAMPLE
+
+We can now try this again by verifying that we split into lines with the
+function and rho =⍴=.
+
+#+BEGIN_EXAMPLE
+      ⍴#.analysis.lines contents
+2330
+#+END_EXAMPLE
+
+The =#.analysis= namespace now contains
+
+#+BEGIN_EXAMPLE
+     :Namespace analysis
+         ⎕IO ⎕ML ⎕WX←1 1 3
+
+[0]      ∇ Z←read_file path;tie
+[1]        tie←path ⎕NTIE 0
+[2]        Z←⎕NREAD tie 80(⎕NSIZE tie)0
+[3]        ⎕NUNTIE tie
+[4]      ∇
+
+[0]      lines←{⎕ML←3
+[1]             (⍵≠(⎕UCS 13))⊂⍵
+[2]      }
+
+     :EndNamespace
+#+END_EXAMPLE
+
+** Parsing lines into table data
+
 Next, we wish to parse one line, each line consisting of a municipality
 code and the name of the municipality, followed by the swedish party name
 and the amount of votes for this party during the different years.
@@ -2288,53 +2344,72 @@ I will turn on boxing which makes it easy to see the resulting arrays.
 Was OFF
 #+END_EXAMPLE
 
-I forgot to tell you that setting =⎕ML←3= inside the dynamic function 
-will ensure that the Migration Level is only changed within that execution
-environment and will not change the Migration Level outside of the dynamic
-function. The following example pick's =⊃= the second array element from lines
-and then splits the line on comma.
+An interesting detail to remember is that  setting =⎕ML←3= inside the direct function 
+will ensure that the Migration Level is only changed within the execution environment
+of thast direct function and not change outside the direct function.
+We can see this with a small example on the Dyalog APL environment.
 
 #+BEGIN_EXAMPLE
-      { ⎕ML←3 ⋄ (⍵≠',')⊂⍵ } 2⊃lines
+      ⎕ML
+1
+      { ⎕ML←3 ⋄ ⎕←'ML='⎕ML } ⍬
+ ML=  3
+      ⎕ML
+1
+#+END_EXAMPLE
+
+The following example direct function pick's =⊃= the second array element from the lines and then 
+splits the line on comma.
+
+#+BEGIN_EXAMPLE
+      {⎕ML←3⋄(⍵≠',')⊂⍵} 2⊃ #.analysis.lines contents
 ┌→──────────────────┬───────────┬────┬────┬────┬────┬────┬────┬────┬────┬────┬────┬────┬────┐
 │                   │Moderaterna│1918│2678│3860│5197│4978│4364│5831│5782│5901│3822│7326│8397│
 │0114 Upplands Väsby│           │    │    │    │    │    │    │    │    │    │    │    │    │
 └──────────────────→┴──────────→┴───→┴───→┴───→┴───→┴───→┴───→┴───→┴───→┴───→┴───→┴───→┴───→┘
 
-      ⍴ { ⎕ML←3 ⋄ (⍵≠',')⊂⍵ } 2⊃lines
+      ⍴ {⎕ML←3⋄(⍵≠',')⊂⍵} 2⊃ #.analysis.lines contents
 14
 #+END_EXAMPLE
 
 As we can see, we get a 14 element array from splitting a line into words, based on comma ','
-as the separator. Let us now assign this dynamic function to =split_words=
+as the separator. Let us now assign this direct function to =words= in the =#.analysis= namespace.
 
 #+BEGIN_EXAMPLE
-      split_words ← { ⎕ML←3 ⋄ (⍵≠',')⊂⍵ }
-      split_words
-{⎕ML←3 ⋄ (⍵≠',')⊂⍵}
+      ⎕vr '#.analysis.words'
+      ∇ words←{⎕ML←3 ⋄ (⍵≠',')⊂⍵}
+      ∇
 #+END_EXAMPLE
+
+And we should get the same result by applying the new function =words= on thes second line.
+
+#+BEGIN_EXAMPLE
+     #.analysis.words 2⊃ #.analysis.lines contents
+┌→──────────────────┬───────────┬────┬────┬────┬────┬────┬────┬────┬────┬────┬────┬────┬────┐
+│                   │Moderaterna│1918│2678│3860│5197│4978│4364│5831│5782│5901│3822│7326│8397│
+│0114 Upplands Väsby│           │    │    │    │    │    │    │    │    │    │    │    │    │
+└──────────────────→┴──────────→┴───→┴───→┴───→┴───→┴───→┴───→┴───→┴───→┴───→┴───→┴───→┴───→┘
+#+END_EXAMPLE
+
 
 But this is not really enough, we need to convert vote amounts into integers from text
 arrays which they are now. We can actually see how different things are represented
 internally in Dyalog APL by using 'data representation' =⎕DR=, let us observe the results
-for floating points numbers, integer, integer array and a matrix.
+for a floating points number, an integer, an integer array and an integer matrix.
 
 #+BEGIN_EXAMPLE
-      ]box on
-Was OFF
-
       0.1 1 (⍳4) (2 2⍴⍳4)
 ┌→──┬─┬───────┬───┐
 │0.1│1│1 2 3 4│1 2│
 │   │ │       │3 4↓
 └~──┴─┴~─────→┴~─→┘
 
-      ⎕dr ¨ 0.1 1 (⍳4) (2 2⍴⍳4)
+      ⎕DR ¨ 0.1 1 (⍳4) (2 2⍴⍳4)
 645 83 83 83
 #+END_EXAMPLE
 
-continually, let us look at the result of =⎕DR= on a single character, a text array
-and a text matrix.
+likewise, let us look at the result of =⎕DR= on a single character, a text array and a 
+text matrix.
 
 #+BEGIN_EXAMPLE
       (⎕ucs 97) 'textarray' (2 5 ⍴ 'textmatrix')
@@ -2347,7 +2422,232 @@ and a text matrix.
 80 80 80
 #+END_EXAMPLE
 
-Let us now use this new-gained knowledge and interpret the different words which 
-are the result of =split_words= applied to each line.
+We can now check that we get what we expect when converting the result from =word= on a 
+line. As we wish to explore our way into the correct result, we will try to find a solution
+in the Dyalog APL environment before we encode it into the =#.analysis= namespace.
+
+So, the first question is: How do we turn a text array into the number it represents?
+The answer is luckily very simple, we use the built in monadic 'execute' =⍎= which interprets
+the text array passed as the right argument as a Dyalog APL statement.
+Observe the following examples
+
+#+BEGIN_EXAMPLE
+     ⍎ '10'
+10
+     ⍎ '⍳10'
+1 2 3 4 5 6 7 8 9 10
+
+     ⍎ '2 5 ⍴ ⍳10'
+1 2 3 4  5
+6 7 8 9 10
+#+END_EXAMPLE
+
+We can see that the data representation =⎕DR= of the result is coherent with what
+we have seen before for integers, arrays and matrices.
+
+#+BEGIN_EXAMPLE
+     ⎕dr ⍎ '10'
+83
+     ⎕dr ⍎ '⍳10'
+83
+     ⎕dr ⍎ '2 5 ⍴ ⍳10'
+83
+#+END_EXAMPLE
+
+Back to the task at hand armed with execute =⍎=, we wish to execute all but the first
+two elements of the line. So, what if we take the first two elements, and catenate this
+with the result of executing every element of the remaining array?
+Let us also contrast this against a listing of the types of the original untouched elements
+we get from applying =words=.
+
+#+BEGIN_EXAMPLE
+     {⍵,[0.5]⎕dr ¨⍵} #.analysis.words 2⊃ #.analysis.lines contents
+┌→──────────────────┬───────────┬────┬────┬────┬────┬────┬────┬────┬────┬────┬────┬────┬────┐
+↓                   │Moderaterna│1918│2678│3860│5197│4978│4364│5831│5782│5901│3822│7326│8397│
+│0114 Upplands Väsby│           │    │    │    │    │    │    │    │    │    │    │    │    │
+├──────────────────→┼──────────→┼───→┼───→┼───→┼───→┼───→┼───→┼───→┼───→┼───→┼───→┼───→┼───→┤
+│80                 │80         │80  │80  │80  │80  │80  │80  │80  │80  │80  │80  │80  │80  │
+└~──────────────────┴~──────────┴~───┴~───┴~───┴~───┴~───┴~───┴~───┴~───┴~───┴~───┴~───┴~───┘
+#+END_EXAMPLE
+
+Okay, so taking the first 2 elements, we can do that with dyadic 'take' =↑=, then we also 
+need to  drop the first two, which can be done with dyadic 'drop' =↓=, and then we execute
+the rest with =⍎=.
+
+#+BEGIN_EXAMPLE
+     {⍵,[0.5]⎕dr ¨⍵} {(2↑⍵),(⍎¨2↓⍵)}  #.analysis.words 2⊃ #.analysis.lines contents
+┌→──────────────────┬───────────┬────┬────┬────┬────┬────┬────┬────┬────┬────┬────┬────┬────┐
+↓                   │Moderaterna│1918│2678│3860│5197│4978│4364│5831│5782│5901│3822│7326│8397│
+│0114 Upplands Väsby│           │    │    │    │    │    │    │    │    │    │    │    │    │
+├──────────────────→┼──────────→┼~───┼~───┼~───┼~───┼~───┼~───┼~───┼~───┼~───┼~───┼~───┼~───┤
+│80                 │80         │163 │163 │163 │163 │163 │163 │163 │163 │163 │163 │163 │163 │
+└~──────────────────┴~──────────┴~───┴~───┴~───┴~───┴~───┴~───┴~───┴~───┴~───┴~───┴~───┴~───┘
+#+END_EXAMPLE
+
+The code 163 stands for '16 bit signed integer' if you read the =⎕DR= manual pages for Dyalog APL.
+Therefore, the added direct function ={(2↑⍵),(⍎¨2↓⍵)}= is most likely correct.
+Let us store it into the =#.analysis= namespace as 'parse'.
+
+#+BEGIN_EXAMPLE
+     ⎕vr '#.analysis.parse'
+     ∇ parse←{(2↑⍵),(⍎¨2↓⍵)}
+     ∇
+#+END_EXAMPLE
+
+A sanity check that this works as expected is never wrong
+
+#+BEGIN_EXAMPLE
+     {⍵,[0.5]⎕dr ¨⍵} #.analysis.parse #.analysis.words 2⊃ #.analysis.lines contents
+┌→──────────────────┬───────────┬────┬────┬────┬────┬────┬────┬────┬────┬────┬────┬────┬────┐
+↓                   │Moderaterna│1918│2678│3860│5197│4978│4364│5831│5782│5901│3822│7326│8397│
+│0114 Upplands Väsby│           │    │    │    │    │    │    │    │    │    │    │    │    │
+├──────────────────→┼──────────→┼~───┼~───┼~───┼~───┼~───┼~───┼~───┼~───┼~───┼~───┼~───┼~───┤
+│80                 │80         │163 │163 │163 │163 │163 │163 │163 │163 │163 │163 │163 │163 │
+└~──────────────────┴~──────────┴~───┴~───┴~───┴~───┴~───┴~───┴~───┴~───┴~───┴~───┴~───┴~───┘
+#+END_EXAMPLE
+ 
+The only thing we are missing now, is a way to put all of this into a table. We know that
+each line can be parsed properly into an array, so what remains is to take an array of
+arrays and turn this into a matrix. The function for that is called monadic 'mix' =↑=.
+Let us look at what it does with a small example.
+
+#+BEGIN_EXAMPLE
+     ⍴ (1 2 3) (4 5 6) (7 8 9)
+3
+     ⍴ ↑ (1 2 3) (4 5 6) (7 8 9)
+3 3
+     ↑ (1 2 3) (4 5 6) (7 8 9)
+1 2 3
+4 5 6
+7 8 9
+#+END_EXAMPLE
+
+Likewise, we should be able to mix =↑= the result of word-splitting and parsing each
+line. The combined word-split and parsing can be done with function composition using
+'jot' =∘=. Let me first change the current namespace since I am getting very tired of
+typing the same namespace name over and over again.
+
+#+BEGIN_EXAMPLE
+      ⎕cs '#.analysis'
+      ⎕this
+#.analysis
+#+END_EXAMPLE
+
+Remember that 'change space' =⎕cs=  used to change the current namespace, and that
+=⎕this= is used to retrieve the name of the current namespace. When in the =#.analysis=
+namespace, we can access the functions immediately without having to prefix them with 
+the names.
+
+#+BEGIN_EXAMPLE
+     parse∘words 2⊃ lines #.contents
+┌→──────────────────┬───────────┬────┬────┬────┬────┬────┬────┬────┬────┬────┬────┬────┬────┐
+│                   │Moderaterna│1918│2678│3860│5197│4978│4364│5831│5782│5901│3822│7326│8397│
+│0114 Upplands Väsby│           │    │    │    │    │    │    │    │    │    │    │    │    │
+└──────────────────→┴──────────→┴~───┴~───┴~───┴~───┴~───┴~───┴~───┴~───┴~───┴~───┴~───┴~───┘
+#+END_EXAMPLE
+
+We would next want to perform =parse∘words= on every result from lines of #.contents.
+Why did I change =contents= to =#.contents= all of a sudden? Well, because we moved
+into the =#.analysis= namespace, from the root namespace =#=, and the =contents= variable
+was created in the root namespace =#=.
+What we would like to do is the following
+
+:      ⍴ ↑ parse∘words ¨ lines #.contents
+
+But, doing this exposes an error (or as I like so say; an interesting situation).
+
+#+BEGIN_EXAMPLE
+     ⍴ ↑ parse∘words ¨ lines #.contents
+⍎SYNTAX ERROR
+parse[0] ..
+#+END_EXAMPLE
+
+The way to interpet this error, is that execute =⍎= hit a syntax error when trying to execute
+the passed text array containing =..=, in the function parse, on line zero (0). 
+Because we have the ability to quickly look at the source of a
+direct function via vector representation =⎕vr=, we do so.
+
+:      ⎕vr 'parse'
+:      ∇ parse←{(2↑⍵),(⍎¨2↓⍵)}
+:      ∇
 
 
+Right, so we see =..= somewhere in the number series then. A quick grep in the linux
+environment for ',..' should give us a hint of what this looks like.
+
+#+BEGIN_EXAMPLE
+> grep ',\.\.' ME0104B6.csv | more
+0126 Huddinge,Sverigedemokraterna,..,..,..,..,..,..,..,..,368,764,1297,2569
+0127 Botkyrka,Kristdemokraterna,232,242,282,398,..,592,1793,1072,3243,3327,2537,2110
+#+END_EXAMPLE
+
+All right, so when there is no data for a specific party during a specific year, the
+result is '..' instead of zero. In our case, it would be better if these '..' where to
+be encoded as zeroes. So, what we want to, is to convert =..= into zero, or execute
+whatever it is; this merits its own name, something like =parse_votes=.
+But first, I will introduce you to direct function guards.
+
+Guards are expressions wich allow you to control the flow of the execution within 
+the direct function, they are expressed as boolean expressions ending with a colon ':'.
+Some simple examples will elucidate this for you.
+
+First a simple guard testing if the right argument is 1.
+#+BEGIN_EXAMPLE
+      { ⍵=1:'equal to one' ⋄ 'not equal to one'} ¨ 1 0 0 1
+┌→───────────┬────────────────┬────────────────┬────────────┐
+│equal to one│not equal to one│not equal to one│equal to one│
+└───────────→┴───────────────→┴───────────────→┴───────────→┘
+#+END_EXAMPLE
+
+Now with two guards, the first guard is a compound expression with the connective 'and' ∧,
+
+and the second guard tests for membership in an array.
+
+:      { (⍵≤4) ∧ (⍵ ≥ 1):'1-4' ⋄ ⍵∊(5 6 7 8):'5-8' ⋄ ⍵ } ¨ ¯2+⍳12
+: ┌→─┬─┬───┬───┬───┬───┬───┬───┬───┬───┬─┬──┐
+: │¯1│0│1-4│1-4│1-4│1-4│5-8│5-8│5-8│5-8│9│10│
+: └~─┴─┴──→┴──→┴──→┴──→┴──→┴──→┴──→┴──→┴─┴~─┘
+
+The final example shows that a guard can access a variable which has been assigned
+to in the beginning of the direct function.
+
+#+BEGIN_EXAMPLE
+      { (f s)←⍵ ⋄ f>s:'first!' ⋄ f<s:'second!' ⋄ 'equal!' } ¨ (1 2) (2 1) (1 1)
+┌→──────┬──────┬──────┐
+│second!│first!│equal!│
+└──────→┴─────→┴─────→┘
+#+END_EXAMPLE
+
+Let us now use the guard to test the possible number for equality with =..= and
+if so, return it as zero (0). Otherwise we execute it.
+
+#+BEGIN_EXAMPLE
+       { ⍵≡'..': 0 ⋄ ⍎ ⍵ } '12'
+12
+       { ⍵≡'..': 0 ⋄ ⍎ ⍵ } '..'
+0
+#+END_EXAMPLE
+
+Let us put this as =parse_votes= in our =#.analysis= namespace, and change so that
+the parse function uses =parse_votes= on each of the possible votes instead of just
+execute =⍎=.
+
+#+BEGIN_EXAMPLE
+     ⎕vr 'parse_votes'
+     ∇ parse_votes←{⍵≡'..':0 ⋄ ⍎⍵}
+     ∇
+     
+     ⎕vr 'parse'
+     ∇ parse←{(2↑⍵),(parse_votes¨2↓⍵)}
+     ∇
+#+END_EXAMPLE
+
+We can now try to re-run the same function that failed before (warning for the weak
+of heart, this will fail again).
+
+#+BEGIN_EXAMPLE
+     ⍴ parse∘words ¨ lines #.contents
+VALUE ERROR: No result was provided when the context expected one
+parse_votes[0] parse_votes←{⍵≡'..':0 ⋄ ⍎⍵}
+                                     ∧
+#+END_EXAMPLE
