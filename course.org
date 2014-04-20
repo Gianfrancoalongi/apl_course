@@ -2216,14 +2216,14 @@ when we look at it from outside the Dyalog APL environment.
 ** Parsing contents into lines
 We can now move on to parsing this and doing something useful with the
 contents. The interesting thing to realize now, is that the text array 
-in content contains all characters, including the carriage return character \n 
-which has ASCII code 13. We can use the Unicode Convert function =⎕UCS= to 
+in content contains all characters, including the line feed character \n 
+which has ASCII code 10. We can use the Unicode Convert function =⎕UCS= to 
 recreate any character based on it's numeric code, and thus, we can match
-all carriage returns with (⎕UCS 13), allowing us to count the amount of
+all carriage returns with (⎕UCS 10), allowing us to count the amount of
 newlines in the file.
 
 #+BEGIN_EXAMPLE
-      +/ contents = ⎕UCS 13
+      +/ contents = ⎕UCS 10
 2329
 #+END_EXAMPLE
 
@@ -2233,7 +2233,7 @@ visually by performing the same comparison on the 20 first characters
 from offset 70 in the text-array.
 
 #+BEGIN_EXAMPLE
-      contents[70+⍳20]=⎕UCS 13
+      contents[70+⍳20]=⎕UCS 10
 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0
 #+END_EXAMPLE
 
@@ -2243,7 +2243,7 @@ code for it.
 
 #+BEGIN_EXAMPLE
       ⎕UCS contents[76]
-13
+10
 #+END_EXAMPLE
 
 We can use what we have seen, together with 'partition' =⊂= from =⎕ML←3= to 
@@ -2251,7 +2251,7 @@ break the contents into lines, this is usually what you want to do when reading
 a file and parsing it.
 
 #+BEGIN_EXAMPLE
-      ⍴ { ⎕ML←3 ⋄ lines←(contents≠⎕UCS 13)⊂contents ⋄ lines } ⍬
+      ⍴ { ⎕ML←3 ⋄ lines←(contents≠⎕UCS 10)⊂contents ⋄ lines } ⍬
 2330
 #+END_EXAMPLE
 
@@ -2264,7 +2264,7 @@ This sets the Migration Level to 3. At Migration Level 3, we have access to the
 IBM definition of =⊂= called 'partition', which is very convenient for splitting
 arrays.
 
-:    lines←(contents≠⎕UCS 13)⊂contents
+:    lines←(contents≠⎕UCS 10)⊂contents
 
 here we split the text array based on the binary array which is the result of 
 finding all non-carriage returns. Every array element will now be text arrays
@@ -2277,7 +2277,7 @@ of elements by using shape =⍴=. We might as well extract the second line
 instead, by using 'pick' =⊃= with 2.
 
 #+BEGIN_EXAMPLE
-      2⊃ { ⎕ML←3 ⋄ lines←(contents≠⎕UCS 13)⊂contents ⋄ lines } ⍬
+      2⊃ { ⎕ML←3 ⋄ lines←(contents≠⎕UCS 10)⊂contents ⋄ lines } ⍬
 
 0114 Upplands Väsby,Moderaterna,1918,2678,3860,5197,4978,4364,5831,.....
 #+END_EXAMPLE
@@ -2285,7 +2285,7 @@ instead, by using 'pick' =⊃= with 2.
 Let us assign this result to lines and count them using shape ⍴.
 
 #+BEGIN_EXAMPLE
-      lines ← { ⎕ML←3 ⋄ lines←(contents≠⎕UCS 13)⊂contents ⋄ lines } ⍬
+      lines ← { ⎕ML←3 ⋄ lines←(contents≠⎕UCS 10)⊂contents ⋄ lines } ⍬
       ⍴lines
 2330
 #+END_EXAMPLE
@@ -2299,7 +2299,7 @@ across multiple lines).
 #+BEGIN_EXAMPLE
       ⎕vr '#.analysis.lines'
      ∇ lines←{⎕ML←3
-[1]        (⍵≠(⎕UCS 13))⊂⍵
+[1]        (⍵≠(⎕UCS 10))⊂⍵
 [2]    }
      ∇
 #+END_EXAMPLE
@@ -2325,7 +2325,7 @@ The =#.analysis= namespace now contains
 [4]      ∇
 
 [0]      lines←{⎕ML←3
-[1]             (⍵≠(⎕UCS 13))⊂⍵
+[1]             (⍵≠(⎕UCS 10))⊂⍵
 [2]      }
 
      :EndNamespace
@@ -2642,12 +2642,51 @@ execute =⍎=.
      ∇
 #+END_EXAMPLE
 
-We can now try to re-run the same function that failed before (warning for the weak
-of heart, this will fail again).
+We can now try to re-run the same function that failed before 
 
 #+BEGIN_EXAMPLE
-     ⍴ parse∘words ¨ lines #.contents
-VALUE ERROR: No result was provided when the context expected one
-parse_votes[0] parse_votes←{⍵≡'..':0 ⋄ ⍎⍵}
-                                     ∧
+      ⍴ parse∘words ¨ lines #.contents
+2329
+#+END_EXAMPLE
+
+Voila, we get 2329 results, each array of the 2329 arrays is an internal 
+data array of length 14.
+
+#+BEGIN_EXAMPLE
+      ⍴ 2 ⊃ parse∘words ¨ lines #.contents
+14
+#+END_EXAMPLE
+
+We can thus mix this result into a 2329 by 14 matrix and assign this to a
+variable which we call =tab= for table.
+
+#+BEGIN_EXAMPLE
+      ⍴ ↑ parse∘words ¨ lines #.contents
+2329 14
+
+      tab ← ↑ parse∘words ¨ lines #.contents
+      tab[2 3 4;]
+┌→──────────────────┬─────────────┬────┬────┬────┬────┬────┬────┬────┬────┬────┬────┬────┬────┐
+↓0114 Upplands Väsby│Moderaterna  │1918│2678│3860│5197│4978│4364│5831│5782│5901│3822│7326│8397│
+├──────────────────→┼────────────→┼~───┼~───┼~───┼~───┼~───┼~───┼~───┼~───┼~───┼~───┼~───┼~───┤
+│0114 Upplands Väsby│Centerpartiet│2917│3141│2108│1723│964 │1071│660 │586 │439 │489 │848 │918 │
+├──────────────────→┼────────────→┼~───┼~───┼~───┼~───┼~───┼~───┼~───┼~───┼~───┼~───┼~───┼~───┤
+│0114 Upplands Väsby│Folkpartiet  │1201│2151│1989│978 │3206│3098│2550│1833│1028│3350│1907│1890│
+└──────────────────→┴────────────→┴~───┴~───┴~───┴~───┴~───┴~───┴~───┴~───┴~───┴~───┴~───┴~───┘
+#+END_EXAMPLE
+
+We thus define the last direct function for parsing this to a table 
+in the =#.analysis= namespace.
+
+#+BEGIN_EXAMPLE
+     ⎕vr 'to_table'
+     ∇ to_table←{ ↑ parse∘words¨lines ⍵}
+     ∇
+#+END_EXAMPLE
+
+and the final check that this is working as expected (2329 rows and 14 columns)
+
+#+BEGIN_EXAMPLE
+      ⍴ to_table read_file './ME0104B6.csv'
+2329 14
 #+END_EXAMPLE
