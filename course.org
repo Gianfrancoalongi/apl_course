@@ -2690,3 +2690,120 @@ and the final check that this is working as expected (2329 rows and 14 columns)
       ⍴ to_table read_file './ME0104B6.csv'
 2329 14
 #+END_EXAMPLE
+** Analysis of table data
+
+We now have a reliable and fast way of parsing the voting data into a
+table, which will allow us to perform queries and analyze the vote
+results. Let us work with this and start answering some questions.
+
+:    table← to_table read_file './ME0104B6.csv'
+
+As we can see quickly (and will see in the different parts to come,
+the first row is unfortunately the header of the columns and thus never
+interesting for all the statistics, unless we have forgotten what the
+columns represent. Let us drop the first row and reassign to the table.
+
+:   table ← 1↓table
+
+*** Which parties are part of the statistics?
+
+We can collect the whole second column or all rows and take the set
+union on this and mix the result to produce a readable text matrix.
+
+#+BEGIN_EXAMPLE
+      ↑ ∪ table[;2]
+Moderaterna
+Centerpartiet
+Folkpartiet
+Kristdemokraterna
+Miljöpartiet
+Socialdemokraterna
+Vänsterpartiet
+Sverigedemokraterna
+#+END_EXAMPLE
+
+*** How do we target one specific municipality?
+
+I grew up in a small municipality called Svalöv, we can find all rows which 
+has Svalöv data by utilizig compress =/= and substring match of the text
+'Svalöv'. For this we will use the dyadic function 'find' (underscore
+epsilon)  =⍷= which returns a binary array indicating where the occurrences
+are in the right argument of the left argument.
+See the following example below
+
+#+BEGIN_EXAMPLE
+     'tea' ⍷ 'teatralictea'
+1 0 0 0 0 0 0 0 0 1 0 0
+#+END_EXAMPLE
+
+With find =⍷= we will be able to generate the indices of the rows for
+which the first column contains 'Svalöv'. I will first present the
+expression and then break it down for you.
+
+#+BEGIN_EXAMPLE
+       ({ ∨/ 'Svalöv' ⍷ ⍵ } ¨ table[;1])/⍳⊃⍴table
+761 762 763 764 765 766 767 768
+#+END_EXAMPLE
+
+At the right side of compress =/= we have 
+
+:   ⍳⊃⍴table 
+
+(the indices of each row). This is done by using shape =⍴= which 
+returns the dimensions of the table, then selecting the first 
+number of that array (with pick ⊃) and then generating all numbers 
+from 1 to that number.
+
+On the left side of compress =/= we have 
+
+:   ({ ∨/ 'Svalöv' ⍷ ⍵ } ¨ table[;1])
+
+(match rows containing 'Svalöv'). This is done by selecting all the
+first columns from all rows in table, and then, for each element,
+performing an each with a direct function in which we search for
+'Svalöv' and do an or-reduction on the resulting binary array.
+The or reduction is necessary to produce a single binary value
+for each find result against each row.
+
+Compress works both like a function for removing elements from
+arrays, and as a function to duplicate elements. Look at the 
+following examples
+
+#+BEGIN_EXAMPLE
+     0 1 1 0 1 0 0 0 0 / 'teatralic'
+ear
+
+      1 2 3 4 / 'abcd'
+abbcccdddd
+
+      (⌽⍳5)/⍳5
+1 1 1 1 1 2 2 2 2 3 3 3 4 4 5
+#+END_EXAMPLE
+
+back to the original expression which returns the row indices
+for which 'Svalöv' is part of the name, we can take these row
+indices and select all columns with it.
+
+#+BEGIN_EXAMPLE
+      rows ←  ({ ∨/ 'Svalöv' ⍷ ⍵ } ¨ table[;1])/⍳⊃⍴table
+      rows
+761 762 763 764 765 766 767 768
+      table[rows;]
+┌→──────────┬───────────────────┬────┬────┬────┬────┬────┬────┬────┬────┬────┬────┬────┬────┐
+↓1214 Svalöv│Moderaterna        │884 │1114│1586│1889│1768│1473│1678│1748│1670│1103│1713│2167│
+├──────────→┼──────────────────→┼~───┼~───┼~───┼~───┼~───┼~───┼~───┼~───┼~───┼~───┼~───┼~───┤
+│1214 Svalöv│Centerpartiet      │3112│3066│2286│2089│1762│1538│1219│1177│932 │919 │1030│924 │
+├──────────→┼──────────────────→┼~───┼~───┼~───┼~───┼~───┼~───┼~───┼~───┼~───┼~───┼~───┼~───┤
+│1214 Svalöv│Folkpartiet        │422 │607 │690 │341 │779 │622 │480 │296 │228 │696 │444 │454 │
+├──────────→┼──────────────────→┼~───┼~───┼~───┼~───┼~───┼~───┼~───┼~───┼~───┼~───┼~───┼~───┤
+│1214 Svalöv│Kristdemokraterna  │55  │64  │42  │64  │0   │137 │481 │201 │704 │526 │321 │272 │
+├──────────→┼──────────────────→┼~───┼~───┼~───┼~───┼~───┼~───┼~───┼~───┼~───┼~───┼~───┼~───┤
+│1214 Svalöv│Miljöpartiet       │0   │0   │0   │66  │93  │386 │186 │321 │214 │206 │228 │380 │
+├──────────→┼──────────────────→┼~───┼~───┼~───┼~───┼~───┼~───┼~───┼~───┼~───┼~───┼~───┼~───┤
+│1214 Svalöv│Socialdemokraterna │3412│3422│3501│3727│3631│3407│2955│3764│2848│2969│2672│2284│
+├──────────→┼──────────────────→┼~───┼~───┼~───┼~───┼~───┼~───┼~───┼~───┼~───┼~───┼~───┼~───┤
+│1214 Svalöv│Vänsterpartiet     │119 │105 │109 │122 │115 │163 │134 │209 │471 │297 │225 │274 │
+├──────────→┼──────────────────→┼~───┼~───┼~───┼~───┼~───┼~───┼~───┼~───┼~───┼~───┼~───┼~───┤
+│1214 Svalöv│Sverigedemokraterna│0   │0   │0   │0   │0   │0   │0   │0   │35  │355 │729 │1039│
+└──────────→┴──────────────────→┴~───┴~───┴~───┴~───┴~───┴~───┴~───┴~───┴~───┴~───┴~───┴~───┘
+#+END_EXAMPLE
