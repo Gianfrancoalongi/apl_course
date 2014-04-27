@@ -1,6 +1,6 @@
 * APL by example, an inductive course for the curious mind.
 
-The target audience for this course, is anyone who is fearless.
+The target audience for this course, is anyone who is curious.
 You will be immediately thrown into Dyalog APL with expressions you can
 enter yourself in the Dyalog APL session.
 While we walk through several short and sweet example programs, I will hold
@@ -108,27 +108,27 @@ cddc
 The encryption algorithm is quite simple
 
 #+BEGIN_EXAMPLE
-  1. Rotate the encoding alfabet N steps : N is the encryption key 
+  1. Rotate the encoding alphabet N steps : N is the encryption key 
   2. For every character C in the input text
-     2.1 Let I be the index of C in the normal alfabet
+     2.1 Let I be the index of C in the normal alphabet
      2.2 Encode C with the character found at index I 
-         from the rotated encoding alfabet
+         from the rotated encoding alphabet
 #+END_EXAMPLE
 
-Lets start of with the rotation of the alfabet, first we need an alfabet to work on.
+Lets start of with the rotation of the alphabet, first we need an alphabet to work on.
 We make this simple and assume that only alphabetic characters can be used. 
-Let's define the alfabet, this can be done in two ways, I will show both ways here. 
-First we can do it by assigning the whole alfabet in a string.
+Let's define the alphabet, this can be done in two ways, I will show both ways here. 
+First we can do it by assigning the whole alphabet in a string.
 
 #+BEGIN_EXAMPLE
-      alfabet←'abcdefghijklmnopqrstuvwxyz'
-      alfabet
+      alphabet←'abcdefghijklmnopqrstuvwxyz'
+      alphabet
 abcdefghijklmnopqrstuvwxyz
 #+END_EXAMPLE
 
 the other way is to use the Unicode Convert system function ⎕UCS. It suffices to say
-that it can encode the ASCII number to the appropriate alfabetic character. 
-Since the alfabet in this case consists of 26 characters, we generate 26 numbers.
+that it can encode the ASCII number to the appropriate alphabetic character. 
+Since the alphabet in this case consists of 26 characters, we generate 26 numbers.
 
 #+BEGIN_EXAMPLE
       ⍳26
@@ -142,22 +142,28 @@ next, we know that lowercase 'a' is on 97, so we shift this sequence by 96.
 97 98 99 100 101 102 103 104 105 106 107 108 109 110 111 112 113 114 115 116 117 118 119 120 121 122
 #+END_EXAMPLE
 
-using ⎕UCS we can now get the full alfabet we want
+using ⎕UCS we can now get the full alphabet we want
 
 #+BEGIN_EXAMPLE
-      alfabet←⎕UCS 96 + ⍳26
-      alfabet
+      alphabet←⎕UCS 96 + ⍳26
+      alphabet
 abcdefghijklmnopqrstuvwxyz
 #+END_EXAMPLE
 
-Now we want to be able to rotate the alfabet with an encryption key (a number).
+Now we want to be able to rotate the alphabet with an encryption key (a number).
 This is easily done with the 'circle stile' (rotate) ⌽.
 
 #+BEGIN_EXAMPLE
-      rotate←{ ⍵ ⌽ alfabet }
+      rotate←{ ⍵ ⌽ alphabet }
       rotate
  ∇rotate
 #+END_EXAMPLE
+
+-------------------------------------------------------------------------
+-------------------------------------------------------------------------
+TODO: Interesting place to start introducing all the ways you can see
+and find functions and variables, ⎕NL 3 , )vars )fns and ⎕vr, etc.
+Describe ∇rotate and what it is.
 
 Now, try invoking the direct function (d-fn) rotate which we just defined.
 
@@ -176,16 +182,16 @@ We use 'iota' ⍳ for this, in 'dyadic' form (two arguments, one to the left
 and one to the right). 
 
 #+BEGIN_EXAMPLE
-     indices_in_alfabet ←{ alfabet ⍳ ⍵ }
-     indices_in_alfabet 'abbacus'
+     indices_in_alphabet ←{ alphabet ⍳ ⍵ }
+     indices_in_alphabet 'abbacus'
 1 2 2 1 3 21 19
 #+END_EXAMPLE
 
 Using these indices, we would now like to select letters from the rotated
-alfabet. This is actually encoding the message using the encryption key. 
+alphabet. This is actually encoding the message using the encryption key. 
 
 #+BEGIN_EXAMPLE
-      caesar ←  { rotated←(rotate ⍺),' ' ⋄ rotated[indices_in_alfabet ⍵]}
+      caesar ←  { rotated←(rotate ⍺),' ' ⋄ rotated[indices_in_alphabet ⍵]}
 #+END_EXAMPLE
 
 'diamond' ⋄ is just a newline indicator which used when writing oneliners
@@ -194,24 +200,30 @@ to
 
 #+BEGIN_EXAMPLE
       caesar ←  { rotated←(rotate ⍺),' '
-                  rotated[indices_in_alfabet ⍵]
+                  rotated[indices_in_alphabet ⍵]
                 }
 #+END_EXAMPLE
 
-the first line means that we assign the rotated alfabet with the space character
+the first line means that we assign the rotated alphabet with the space character
 at the end. This because we want to be able to encode spaces as well.
 When inquiring for the indices, the space character will not be part of the normal
-alfabet, and so a number which is 1 higher than the length of the normal alfabet 
+alphabet, and so a number which is 1 higher than the length of the normal alphabet 
 will be returned.
 
 #+BEGIN_EXAMPLE
-      alfabet  ⍳ ' a '
+      alphabet  ⍳ ' a '
 27 1 27
 #+END_EXAMPLE
 
-thus, adding the space at the end of the rotated alfabet, ensures that we take
+thus, adding the space at the end of the rotated alphabet, ensures that we take
 care of encoding spaces as well. 
 we can now try some examples
+
+-------------------------------------------------------------------------
+-------------------------------------------------------------------------
+TODO: Comment that this is effectively only working for lowercase a-z
+and the space. Anything not a space would be encoded as a space, show
+a small example for this as well.
 
 #+BEGIN_EXAMPLE
       0 caesar 'attack at dawn when the enemy soldiers are still sleeping'
@@ -269,6 +281,12 @@ all numbers from ¯26 to ¯1.
 ¯1 ¯2 ¯3 ¯4 ¯5 ¯6 ¯7 ¯8 ¯9 ¯10 ¯11 ¯12 ¯13 ¯14 ¯15 ¯16 ¯17 ¯18 ¯19 ¯20 ¯21 ¯22 ¯23 ¯24 ¯25 ¯26
 #+END_EXAMPLE
 
+-------------------------------------------------------------------------
+-------------------------------------------------------------------------
+TODO: Show that this can also be done with -⍳26 and use the -⍳26 approach
+from now on. Also, describe the difference between - and ¯.
+
+
 what we want to do now, is to use the caesar cipher with each and every key,
 on the cipher text. For this, we will do what is called 'outer product' with the
 caesar d-fn (∘.caesar). This is just distributing the left arguments over the function 
@@ -278,6 +296,15 @@ and the right argument.
       (¯1 × ⍳ 26) ∘.caesar ⊂cipher
  ....this is a lot of text
 #+END_EXAMPLE
+
+
+-------------------------------------------------------------------------
+-------------------------------------------------------------------------
+TODO: Morten and Gitte feels this is slightly overkill and this could
+be better achieved with ¨. This would then be more elegantly written as
+                   (⍳26) caesar ¨ ⊂cipher
+Change this and rewrite the example.
+
 
 We had to 'enclose' ⊂ the right argument to turn it into a scalar for the outer product
 to work properly, this is a detail that will be covered more thoroughly later.
@@ -352,6 +379,23 @@ We can once again use 'shape' ⍴ to verify this, or 'tally' ≢.
 5
 #+END_EXAMPLE
 
+
+
+----------------------------------------------------------------------
+----------------------------------------------------------------------
+TODO: Add description on difference between ≢ and ⍴.
+Do everything with rank.
+
+
+----------------------------------------------------------------------
+----------------------------------------------------------------------
+TODO: Morten and Gitte really does not want ⎕ML to be introduced here
+at all. They really feel this is nothing but bad. Use the ⎕ML 1 version
+to do this instead, bury and forget ⎕ML.
+                  {1↓¨(⍵=' ')⊂⍵} ' ',text 
+⎕ML The power of Christ compels you!
+
+
 Let's now define the lookup function that takes a piece of text, splits it into 
 words and tries to see how many of these words exist in the dictionary.
 First, we need to learn how to split a string into several small strings.
@@ -370,7 +414,7 @@ We can partition an array according to the pattern of a binary mask by using
     ⎕ML←1
 #+END_EXAMPLE
 
-Do NOT forget to execute the last statement ⎕ML←1, it could have interesing
+Do NOT forget to execute the last statement ⎕ML←1, it could have interesting
 consequences! So, let's partition and search for hits! We will do this step-wise to introduce
 the necessary concepts. First we want to split the string into substrings.
 We have seen how to do this in ⎕ML ← 3 (quad ML three).
@@ -398,6 +442,12 @@ by means of outer product with 'match' ≡. This will produce a 10 by 5 matrix.
 0 0 0 0 0
 0 0 0 0 0
 #+END_EXAMPLE
+
+----------------------------------------------------------------------
+----------------------------------------------------------------------
+TODO: Instead of this, use just words ∊ dictionary and this will
+just make us need one +/ and not two of them. This will simplify
+the next coming pages.
 
 Every row of the matrix is one particular word in words, every column is one
 particular entry in the dictionary. The matrix element e_ij is the indications if the
@@ -514,22 +564,20 @@ the functions in the current workspace.
 
 #+BEGIN_EXAMPLE
       )fns
-break   caesar  indices_in_alfabet      rotate  score
+break   caesar  indices_in_alphabet      rotate  score
 #+END_EXAMPLE
 
 we can now use 'vector representation' to display the definition of every 
 function.
 
 #+BEGIN_EXAMPLE
-      ⎕vr ¨ 'break' 'caesar' 'score' 'rotate' 'indices_in_alfabet'
+      ⎕vr ¨ 'break' 'caesar' 'score' 'rotate' 'indices_in_alphabet'
       ∇ break←{rs←¯1×⍳26 ⋄ ss←score¨rs∘.caesar⊂⍵ ⋄ ¯1×1↑⍒ss}
-      ∇ caesar←{rotated←(rotate ⍺),' ' ⋄ rotated[indices_in_alfabet ⍵]}
+      ∇ caesar←{rotated←(rotate ⍺),' ' ⋄ rotated[indices_in_alphabet ⍵]}
       ∇ score←{⎕ML←3 ⋄ words←(' '≠⍵)⊂⍵ ⋄ +/+/words∘.≡dictionary}
-      ∇ rotate←{⍵⌽alfabet}
-      ∇ indices_in_alfabet←{alfabet⍳⍵}
+      ∇ rotate←{⍵⌽alphabet}
+      ∇ indices_in_alphabet←{alphabet⍳⍵}
 #+END_EXAMPLE
-
-
 
 
 ** Breaking the securer caesar cipher
@@ -565,6 +613,14 @@ Lets start by creating our cleartext.
    text,← ⊂'forcalculatingtheexactorapproximatevaluesofvariousfunctionssuchexplicitprocedures'
 #+END_EXAMPLE
 
+----------------------------------------------------------------------
+TODO: Let us not create this nested vector, instead just put the whole
+text in, so just put the prepared text into a workspace and copy it from
+there, then we don't need all of this that follows.
+The student can then explore the text using shape, etc.
+Maybe count the number of e's and the total amount of letters.
+
+
 This should be enough. Notice that we perform 6 element assignments into the array text
 which now holds 6 texts. The first assignment asigns an enclosed array (thus becoming a scalar)
 to text. The second assignment is a special, called 'modified assignment' ,←.
@@ -598,18 +654,36 @@ single string of length 476. In order to concatenate all the strings, we utilize
 
 You noticed that I 'disclosed' ⊃ the result from ,/ before applying shape.
 This is because all reductions with the operator / and some function produce a scalar result.
+
+
+----------------------------------------------------------------------
+----------------------------------------------------------------------
+TODO: Explain that ⎕/ will produce a result of one dimension less than 
+the left input argument (which we can couple to the name: REDUCTION).
+APL is very  consistent in that you can predict the shape of the result.
+At this point it could be worth to introduce shape and rank.
+
+
 But we wish to work on the actual array, therefore we disclose it.
 
 What we need now, is a d-fn for measuring letter frequency in a text.
 For each letter in the alphabet, we wish to count the amount of times it occurrs in 
 a text, and then divide this by the length of the text.
-We utilize the outer product once again, with the alfabet; in the example below,
-we do the following: for each of the 26 letters in the alfabet, perform array
+We utilize the outer product once again, with the alphabet; in the example below,
+we do the following: for each of the 26 letters in the alphabet, perform array
 comparison with the given text to the left, letter by letter inside it.
 I produce a binary 26 by 30 matrix from this result with 'mix' ↑.
 
+
+
+----------------------------------------------------------------------
+----------------------------------------------------------------------
+TODO: No need for the enclose and the mix ↑. Remove this from here 
+and from the other places where the same code is shown.
+
+
 #+BEGIN_EXAMPLE
-      ↑ alfabet ∘.= ⊂'abbacuswasatoolforcalculations'
+      ↑ alphabet ∘.= ⊂'abbacuswasatoolforcalculations'
 1 0 0 1 0 0 0 0 1 0 1 0 0 0 0 0 0 0 0 1 0 0 0 0 1 0 0 0 0 0
 0 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 1 0 0 0 0 0 0 0 0
@@ -641,7 +715,7 @@ I produce a binary 26 by 30 matrix from this result with 'mix' ↑.
 what remains now, is to sum the 1's for each row, this is plus-reduce again.
 
 #+BEGIN_EXAMPLE
-      +/ ↑ alfabet ∘.= ⊂'abbacuswasatoolforcalculations'
+      +/ ↑ alphabet ∘.= ⊂'abbacuswasatoolforcalculations'
 6 2 3 0 0 1 0 0 1 0 0 3 0 1 4 0 0 1 3 2 2 0 1 0 0 0
 #+END_EXAMPLE
 
@@ -649,20 +723,29 @@ we can now see that there are 6 a's in the text, 2 b's etc. We now need to divid
 by the length of the text in question.
 
 #+BEGIN_EXAMPLE
-     (+/ ↑ alfabet ∘.= ⊂'abbacuswasatoolforcalculations')÷⍴'abbacuswasatoolforcalcula
+     (+/ ↑ alphabet ∘.= ⊂'abbacuswasatoolforcalculations')÷⍴'abbacuswasatoolforcalcula
 0.2 0.06666666667 0.1 0 0 0.03333333333 0 0 0.03333333333 0 0 0.1 0 0.03333333333......
 #+END_EXAMPLE
 
 We can now put this into a direct function (d-fn) and amaze at the conciseness.
 
 #+BEGIN_EXAMPLE
-      frequency ← { (+/↑alfabet∘.=⊂⍵)÷⍴⍵ }
+      frequency ← { (+/↑alphabet∘.=⊂⍵)÷⍴⍵ }
       frequency ⊃,/ text
 0.1029411765 0.01470588235 0.03571428571 ......
 #+END_EXAMPLE
 
 Next up, we need to compare how close a measured letter frequency is to the english 
 letter frequency, for that we need the english letter frequency (which I happen to have added).
+
+
+
+----------------------------------------------------------------------
+----------------------------------------------------------------------
+TODO: Where does the variable english come from? Explain and show.
+Perhaps put it into the same workspace as the text will be in.
+
+
 
 #+BEGIN_EXAMPLE
       english
@@ -697,8 +780,13 @@ carthesian products in the range (1 1) to (10 10). We can easily produce all suc
 
 let us now perform outer product with distance to 1 1.
 
+----------------------------------------------------------------------
+----------------------------------------------------------------------
+TODO: 2 ⍕ to display so  that we get two decimals.
+
+
 #+BEGIN_EXAMPLE
-      (⍳ (10 10)) ∘.distance ⊂(1 1)
+       (⍳ (10 10)) ∘.distance ⊂(1 1)
 0 1           2           3           4            5            6            7            8            9
 1 1.414213562 2.236067977 3.16227766  4.123105626  5.099019514  6.08276253   7.071067812  8.062257748  9.055385138
 2 2.236067977 2.828427125 3.605551275 4.472135955  5.385164807  6.32455532   7.280109889  8.246211251  9.219544457
@@ -739,6 +827,16 @@ Now, the grande finale.
 thefirstincarnationofwhatwaslatertobetheapl...(lots of text)
 #+END_EXAMPLE
 
+
+
+----------------------------------------------------------------------
+----------------------------------------------------------------------
+TODO: Mention and describe composition ∘ so that we learn this.
+And mention that (⊂english) would have worked as well.
+          ∘.caesar will also have to change into caesar ¨
+
+
+
 The difference to the prior algorithm is that we have frequency on 'each' ¨ result, and 
 use 'grade-up' ⍋ to get the indices in an ascending order.
 Clearly, ¯17 is the counter-rotation, thus the original text was encrypted with 17 as the key.
@@ -755,13 +853,13 @@ thefirstincarnationofwhatwaslatertobetheapl....(lots of text)
 The full listing for this frequency breaking are shown below.
 
 #+BEGIN_EXAMPLE
-⎕vr ¨ 'freq_break' 'distance' 'frequency' 'caesar' 'rotate' 'indices_in_alfabet'
+⎕vr ¨ 'freq_break' 'distance' 'frequency' 'caesar' 'rotate' 'indices_in_alphabet'
 ∇ freq_break←{rs←¯1×⍳26 ⋄ ds←english∘distance¨frequency¨rs∘.caesar⊂⍵ ⋄ ¯1×1↑⍋ds}
 ∇ distance←{sqd←(⍺-⍵)*2 ⋄ sum←+/sqd ⋄ sum*0.5}
-∇ frequency←{(+/↑alfabet∘.=⊂⍵)÷⍴⍵}
-∇ caesar←{rotated←(rotate ⍺),' ' ⋄ rotated[indices_in_alfabet ⍵]}
-∇ rotate←{⍵⌽alfabet}
-∇ indices_in_alfabet←{alfabet⍳⍵}
+∇ frequency←{(+/↑alphabet∘.=⊂⍵)÷⍴⍵}
+∇ caesar←{rotated←(rotate ⍺),' ' ⋄ rotated[indices_in_alphabet ⍵]}
+∇ rotate←{⍵⌽alphabet}
+∇ indices_in_alphabet←{alphabet⍳⍵}
 #+END_EXAMPLE
 
 ** Saving the work of the day
@@ -792,9 +890,9 @@ Let us load the warmup namespace again
 ./warmup saved Wed Apr  9 20:37:47 2014
       )fns
 break   caesar       distance  freq_break      frequency
-indices_in_alfabet   rotate    score
+indices_in_alphabet   rotate    score
       )vars
-alfabet    cipher   clear_text  dictionary
+alphabet    cipher   clear_text  dictionary
 distances  english  key         rotations       scores
 #+END_EXAMPLE
 
@@ -1090,6 +1188,23 @@ What if we could type the following and actually get what we expect?
 #+BEGIN_EXAMPLE
       book first free on friday for 3 from 2
 #+END_EXAMPLE
+
+
+
+----------------------------------------------------------------------
+----------------------------------------------------------------------
+TODO: It would be nicer if the functions would set the necessary
+data in some kind of internal structure which is passed as the final
+result to 'book' which then does the full computations.
+Like a matrix or a class.
+
+
+
+----------------------------------------------------------------------
+----------------------------------------------------------------------
+TODO: The booking system is dateless, how would this be implemented.
+
+
 
 In case you don't really follow the intention of the above, it means
 to book the first freely available room on friday for 3 hours if 
@@ -2937,4 +3052,4 @@ most popular parties are =Socialdemokraterna=, =Moderaterna= and =Centerpartiet=
 
 
 
-
+  
