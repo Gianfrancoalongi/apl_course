@@ -159,11 +159,68 @@ This is easily done with the 'circle stile' (rotate) ⌽.
  ∇rotate
 #+END_EXAMPLE
 
--------------------------------------------------------------------------
--------------------------------------------------------------------------
-TODO: Interesting place to start introducing all the ways you can see
-and find functions and variables, ⎕NL 3 , )vars )fns and ⎕vr, etc.
-Describe ∇rotate and what it is.
+Did you notice the del =∇= in front of the function name =rotate= after 
+entering rotate and pressing enter in the Dyalog APL environment?
+The =∇= indicates that =rotate= is a function and not a variable holding
+an array or a scalar. There are different ways to list which functions
+and variables we have available to us in our workspace at this point.
+To list variables, we can use the System Command List Global Defined Variables.
+
+#+BEGIN_EXAMPLE
+   )vars
+alphabet
+#+END_EXAMPLE
+
+To list the functions, we use the System Command List Global Defined Functions.
+
+#+BEGIN_EXAMPLE
+   )fns
+rotate
+#+END_EXAMPLE
+
+System Commands can only be entered by the user in the Dyalog APL environment, 
+and can not be used in Dyalog APL source code. If we wish to use the same
+functionality as System Commands, but in source code, we use System Functions.
+The System Function =Name List= with different arguments will give the same
+functionality as the System Commands.
+
+#+BEGIN_EXAMPLE
+  ⎕NL 2
+alphabet
+#+END_EXAMPLE
+
+and for functions, it is invoked with 3 instead.
+
+#+BEGIN_EXAMPLE
+  ⎕NL 3
+rotate
+#+END_EXAMPLE
+
+=Name List= can actually take an array of input arguments, so we can do the
+following
+
+#+BEGIN_EXAMPLE
+  ⎕NL 2 3
+alphabet
+rotate
+#+END_EXAMPLE
+
+Let us end this little detour by learning how to actually show the definition
+of a function! We use the System Function =Vector Representation= for this.
+
+#+BEGIN_EXAMPLE
+     ⎕vr 'rotate'
+     ∇ rotate←{⍵⌽alphabet}
+     ∇
+#+END_EXAMPLE
+
+Lastly, we can also use the System Function =Canonical Representation= for
+the same thing.
+
+#+BEGIN_EXAMPLE
+     ⎕cr 'rotate'
+ rotate←{⍵⌽alphabet}
+#+END_EXAMPLE
 
 Now, try invoking the direct function (d-fn) rotate which we just defined.
 
