@@ -273,14 +273,19 @@ will be returned.
 #+END_EXAMPLE
 
 thus, adding the space at the end of the rotated alphabet, ensures that we take
-care of encoding spaces as well. 
-we can now try some examples
+care of encoding spaces as well. Note the behavior of dyadic iota =⍳=, and 
+how this implementation is only working for lowercase a-z and that everything
+else will be encoded as a space. Let me demonstrate this as follows.
 
--------------------------------------------------------------------------
--------------------------------------------------------------------------
-TODO: Comment that this is effectively only working for lowercase a-z
-and the space. Anything not a space would be encoded as a space, show
-a small example for this as well.
+#+BEGIN_EXAMPLE
+     rotated ← (rotate 1),' '
+     indices_in_alphabet '.;:!'
+27 27 27 27
+     '[',rotated[indices_in_alphabet '.;:!'],']'
+[    ]
+#+END_EXAMPLE
+
+we can now try some examples
 
 #+BEGIN_EXAMPLE
       0 caesar 'attack at dawn when the enemy soldiers are still sleeping'
