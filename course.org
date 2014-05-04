@@ -539,66 +539,31 @@ step by step in order to gain a full understanding of what is going on here.
 #+END_EXAMPLE
 
 We now want to know many of the words exist in the dictionary. This is done
-by means of outer product with 'match' ≡. This will produce a 10 by 5 matrix.
+by means of member =∊= and a plus-reduce.
 
 #+BEGIN_EXAMPLE
-     words ∘.≡ dictionary
-0 1 0 0 0
-0 0 0 0 0
-0 0 1 0 0
-0 0 0 0 0
-0 0 0 0 0
-0 0 0 0 0
-0 0 0 0 0
-0 0 0 0 0
-0 0 0 0 0
-0 0 0 0 0
+     ws ←  words 'attack  at  dawn  when  the  enemy  soldiers  are  still  sleeping'
+     ws ∊ dictionary
+1 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0
 #+END_EXAMPLE
 
-----------------------------------------------------------------------
-----------------------------------------------------------------------
-TODO: Instead of this, use just words ∊ dictionary and this will
-just make us need one +/ and not two of them. This will simplify
-the next coming pages.
-
-Every row of the matrix is one particular word in words, every column is one
-particular entry in the dictionary. The matrix element e_ij is the indications if the
-i:th word matched the j:th entry in the dictionary. To calculate the total 
-match-score of this text, we 'plus reduce' +/ the matrix two times.
-First time we are collapsing it along the first dimension (columns), this yields
-an array of length 10.
+This produces a binary array where each 1 indicates that the element at that position 
+in the left argument could be found in the right argument to member. If we now reduce
+this with plus-reduce, we will get the correct amount of matches.
 
 #+BEGIN_EXAMPLE
-      +/ words ∘.≡ dictionary
-1 0 1 0 0 0 0 0 0 0
-      ⍴ +/ words ∘.≡ dictionary
-10
-#+END_EXAMPLE
-
-Next we reduce it again, this time we get a scalar result.
-
-#+BEGIN_EXAMPLE
-      +/ +/ words ∘.≡ dictionary
+     +/ ws ∊ dictionary
 2
-      ⍴ +/ +/ words ∘.≡ dictionary
+     ⍴ +/ ws ∊ dictionary
+
 #+END_EXAMPLE
 
-We can see that this is a scalar result since 'shape' reports an empty result.
-This means that there is no dimension on the argument to 'shape' ⍴. Scalars are
-dimension-less in APL.
-
+We can see that this is a scalar result since shape reports an empty result. This means 
+that there is no dimension on the argument to shape. Scalars are dimension-less in APL. 
 We now have the recipe for the score calculation, and we can define our direct function.
 
 #+BEGIN_EXAMPLE
-      score ← { ws ← words ⍵ ⋄ +/+/ws∘.≡dictionary}
-#+END_EXAMPLE
-
-Remember that this is semantically equivalent to the following multi-line definition.
-
-#+BEGIN_EXAMPLE
-      score ← { ws ← words ⍵
-                +/+/ws∘.≡dictionary
-              }
+      score ← { +/ (words ⍵) ∊ dictionary }
 #+END_EXAMPLE
 
 and we test it with our decrypted text.
@@ -685,7 +650,7 @@ function.
       ⎕vr ¨ 'break' 'caesar' 'score' 'rotate' 'indices_in_alphabet'
       ∇ break←{rs←-⍳26 ⋄ ss← score ¨ rs caesar ¨ ⊂⍵ ⋄ ¯1×1↑⍒ss}
       ∇ caesar←{rotated←(rotate ⍺),' ' ⋄ rotated[indices_in_alphabet ⍵]}
-      ∇ score←{ ws ← words ⍵ ⋄ +/+/ws∘.≡dictionary}
+      ∇ score ← { +/ (words ⍵) ∊ dictionary }
       ∇ rotate←{⍵⌽alphabet}
       ∇ indices_in_alphabet←{alphabet⍳⍵}
 #+END_EXAMPLE
