@@ -355,8 +355,8 @@ The difference between High Minus =¯= and Monadic Minus =-= is that High Minus
 is used to enter negative numbers without need of parenthesis.
 
 What we want to do now, is to use the caesar cipher with each and every key,
-on the cipher text. For this, we will do what is called 'outer product' with the
-caesar d-fn (∘.caesar). This is just distributing the left arguments over the function 
+on the cipher text. For this, we can use two different approaches, first we can utilize what is called 
+'outer product' with the caesar d-fn (∘.caesar). This is just distributing the left arguments over the function
 and the right argument.
 
 #+BEGIN_EXAMPLE
@@ -364,32 +364,38 @@ and the right argument.
  ....this is a lot of text
 #+END_EXAMPLE
 
-
--------------------------------------------------------------------------
--------------------------------------------------------------------------
-TODO: Morten and Gitte feels this is slightly overkill and this could
-be better achieved with ¨. This would then be more elegantly written as
-                   (⍳26) caesar ¨ ⊂cipher
-Change this and rewrite the example.
-
-
-We had to 'enclose' ⊂ the right argument to turn it into a scalar for the outer product
-to work properly, this is a detail that will be covered more thoroughly later.
-We can make this more readable by creating a rectangular matrix of the result.
-Because we get an array of 26 elements (one caesar-application for every negative key),
-and every element is as long as the cipher text, we can build a 26 by 57 matrix,
-using 'mix' ↑. Let's check that the mental calculation is correct by asking for the dimensions 
-of the result, using 'shape' ⍴.
+Observe this elucidating example in order to understand how the outer product =∘.⎕= works (⎕ is a function).
+A similar and more elegant way is to use each =¨= which will automatically pair each left side
+with the right side through some function, look at this elucidating example
 
 #+BEGIN_EXAMPLE
-      ⍴ ↑ (-⍳26) ∘.caesar ⊂cipher
+      (⍳10) ,¨ 1
+┌→──┬───┬───┬───┬───┬───┬───┬───┬───┬────┐
+│1 1│2 1│3 1│4 1│5 1│6 1│7 1│8 1│9 1│10 1│
+└~─→┴~─→┴~─→┴~─→┴~─→┴~─→┴~─→┴~─→┴~─→┴~──→┘
+#+END_EXAMPLE
+
+now this is how the usage of each =¨= together with the caesar function will look like 
+
+#+BEGIN_EXAMPLE
+      (-⍳26) caesar ¨ ⊂cipher
+#+END_EXAMPLE
+
+We had to 'enclose' ⊂ the right argument to turn it into a scalar so that there is only 'one thing' (a scalar)
+for the each to compose the caesar function with. We can make this more readable by creating a rectangular matrix 
+of the result, because we get an array of 26 elements (one caesar-application for every negative key),
+and every element is as long as the cipher text, we can build a 26 by 57 matrix, using 'mix' =↑=. 
+Let's check that the mental calculation is correct by asking for the dimensions of the result, using 'shape' ⍴.
+
+#+BEGIN_EXAMPLE
+      ⍴ ↑ (-⍳26) caesar ¨ ⊂cipher
 26 57
 #+END_EXAMPLE
 
 Yep, 26 rows and 57 columns.
 
 #+BEGIN_EXAMPLE
-      ↑ (-⍳26) ∘.caesar ⊂cipher
+      ↑ (-⍳26) caesar ¨ ⊂cipher
 cvvcem cv fcyp yjgp vjg gpgoa uqnfkgtu ctg uvknn unggrkpi
 buubdl bu ebxo xifo uif fofnz tpmejfst bsf tujmm tmffqjoh
 attack at dawn when the enemy soldiers are still sleeping
@@ -571,7 +577,7 @@ environment, and once we have 'found the recipe' we put it into a d-fn.
 
 #+BEGIN_EXAMPLE
       rotations ← -⍳26
-      scores ← score ¨ rotations ∘.caesar ⊂cipher
+      scores ← score ¨ rotations caesar ¨ ⊂cipher
 #+END_EXAMPLE
  
 now we want to know which score is the highest ranked one, this can be done by aquiring
@@ -602,14 +608,14 @@ And to finalize this, we should negate the result.
 
 #+BEGIN_EXAMPLE
       rotations ← -⍳26
-      scores ← score ¨ rotations ∘.caesar ⊂cipher
+      scores ← score ¨ rotations caesar ¨ ⊂cipher
       ¯1 × 1 ↑ ⍒ scores
 #+END_EXAMPLE
 
 therefore, our function break can now be defined
 
 #+BEGIN_EXAMPLE
-      break ← {rs ← -⍳26 ⋄ ss ← score ¨ rs∘.caesar ⊂⍵ ⋄ ¯1×1↑⍒ss }
+      break ← {rs ← -⍳26 ⋄ ss ← score ¨ rs caesar ¨ ⊂⍵ ⋄ ¯1×1↑⍒ss }
 #+END_EXAMPLE
 
 and we can test it immediately with a new randomized cipher
@@ -639,7 +645,7 @@ function.
 
 #+BEGIN_EXAMPLE
       ⎕vr ¨ 'break' 'caesar' 'score' 'rotate' 'indices_in_alphabet'
-      ∇ break←{rs←-⍳26 ⋄ ss←score¨rs∘.caesar⊂⍵ ⋄ ¯1×1↑⍒ss}
+      ∇ break←{rs←-⍳26 ⋄ ss← score ¨ rs caesar ¨ ⊂⍵ ⋄ ¯1×1↑⍒ss}
       ∇ caesar←{rotated←(rotate ⍺),' ' ⋄ rotated[indices_in_alphabet ⍵]}
       ∇ score←{⎕ML←3 ⋄ words←(' '≠⍵)⊂⍵ ⋄ +/+/words∘.≡dictionary}
       ∇ rotate←{⍵⌽alphabet}
@@ -887,7 +893,7 @@ Now, the grande finale.
 
 #+BEGIN_EXAMPLE
       rotations←-⍳26
-      distances ← english∘distance ¨ frequency ¨ rotations ∘.caesar ⊂cipher
+      distances ← english∘distance ¨ frequency ¨ rotations caesar ¨ ⊂cipher
       ¯1 × 1↑⍋distances
 ¯17
       ¯17 caesar cipher
@@ -910,7 +916,7 @@ Clearly, ¯17 is the counter-rotation, thus the original text was encrypted with
 The finalizing d-fn now follows.
 
 #+BEGIN_EXAMPLE
-      freq_break←{ rs←-⍳26 ⋄ ds ← english∘distance ¨ frequency ¨ rs ∘.caesar ⊂⍵ ⋄ ¯1×1↑⍋ds }
+      freq_break←{ rs←-⍳26 ⋄ ds ← english∘distance ¨ frequency ¨ rs caesar ¨ ⊂⍵ ⋄ ¯1×1↑⍋ds }
       freq_break cipher
 ¯17
       ¯17 caesar cipher
@@ -921,7 +927,7 @@ The full listing for this frequency breaking are shown below.
 
 #+BEGIN_EXAMPLE
 ⎕vr ¨ 'freq_break' 'distance' 'frequency' 'caesar' 'rotate' 'indices_in_alphabet'
-∇ freq_break←{rs←-⍳26 ⋄ ds←english∘distance¨frequency¨rs∘.caesar⊂⍵ ⋄ ¯1×1↑⍋ds}
+∇ freq_break←{rs←-⍳26 ⋄ ds←english∘distance ¨ frequency ¨ rs caesar ¨ ⊂⍵ ⋄ ¯1×1↑⍋ds}
 ∇ distance←{sqd←(⍺-⍵)*2 ⋄ sum←+/sqd ⋄ sum*0.5}
 ∇ frequency←{(+/↑alphabet∘.=⊂⍵)÷⍴⍵}
 ∇ caesar←{rotated←(rotate ⍺),' ' ⋄ rotated[indices_in_alphabet ⍵]}
