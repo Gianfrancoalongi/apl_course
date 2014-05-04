@@ -486,8 +486,8 @@ as the shape of the shape. Observe the ranks of these results.
 
 Now contrast this with tally =≢=, tally will always return a simple scalar indicating
 the amount of major cells of the right argument - or equally correct: the length of the
-leading axis xor 1 if the right argument is a scalar. Observe the tally of a scalar,
-a matrix and a cube. The major cells for a vector are the elements. The major cells of
+leading axis xor 1 if the right argument is a scalar. Observe the tally of a scalar, 
+an array, a matrix and a cube. The major cells for a vector are the elements. The major cells of
 a matrix are its rows, and the major cells of a cube are the matrices along the first 
 dimension.
 
@@ -503,43 +503,39 @@ dimension.
 3
 #+END_EXAMPLE
 
-----------------------------------------------------------------------
-----------------------------------------------------------------------
-TODO: Morten and Gitte really does not want ⎕ML to be introduced here
-at all. They really feel this is nothing but bad. Use the ⎕ML 1 version
-to do this instead, bury and forget ⎕ML.
-                  {1↓¨(⍵=' ')⊂⍵} ' ',text 
-⎕ML The power of Christ compels you!
-
-
 Let's now define the lookup function that takes a piece of text, splits it into 
-words and tries to see how many of these words exist in the dictionary.
-First, we need to learn how to split a string into several small strings.
-We can partition an array according to the pattern of a binary mask by using
-'partition' ⊂ from what is called ML 3. An example is in order
+words and tries to see how many of these words exist in the dictionary. In order
+to achieve this, we will first write a function that splits a text array on
+spaces and returns an array of text arrays. This function is commonly called
+'words', tokens or split in other languages. Let us call it words.
 
-#+BEGIN_EXAMPLE
-     ⎕ML←3
-     text  ← 'this is a piece of text with spaces'
-     ' '≠text
-1 1 1 1 0 1 1 0 1 0 1 1 1 1 1 0 1 1 0 1 1 1 1 0 1 1 1 1 0 1 1 1 1 1 1
-     (' '≠text)⊂text
- this  is  a  piece  of  text  with  spaces
-     ⍴ (' '≠text)⊂text
-8
-    ⎕ML←1
+#+BEGIN_EXAMPLE 
+     words ← {t←' ',⍵⋄1↓¨(t=' ')⊂t}
+     ]box on
+Was OFF
+      words 'hello there how are you'
+┌→────┬─────┬───┬───┬───┐
+│hello│there│how│are│you│
+└────→┴────→┴──→┴──→┴──→┘
 #+END_EXAMPLE
 
-Do NOT forget to execute the last statement ⎕ML←1, it could have interesting
-consequences! So, let's partition and search for hits! We will do this step-wise to introduce
-the necessary concepts. First we want to split the string into substrings.
-We have seen how to do this in ⎕ML ← 3 (quad ML three).
+The direct function =words= uses partitioned enclose (dyadic left shoe =⊂=),
+to split the text array into an array of words, let us go through the main components
+step by step in order to gain a full understanding of what is going on here.
 
-#+BEGIN_EXAMPLE
-   ⎕ML  ← 3
-   text ← 'attack at dawn when the enemy soldiers are still sleeping'
-   words ← (' ' ≠text)⊂text   
-   ⎕ML ← 1
+#+BEGIN_EXAMPLE 
+      a←'hello there how are you'
+      t←' ',a
+      t
+ hello there how are you
+      (t=' ')⊂t
+┌→─────┬──────┬────┬────┬────┐
+│ hello│ there│ how│ are│ you│
+└─────→┴─────→┴───→┴───→┴───→┘
+      1↓¨((t=' ')⊂t)
+┌→────┬─────┬───┬───┬───┐
+│hello│there│how│are│you│
+└────→┴────→┴──→┴──→┴──→┘
 #+END_EXAMPLE
 
 We now want to know many of the words exist in the dictionary. This is done
@@ -591,18 +587,17 @@ We can see that this is a scalar result since 'shape' reports an empty result.
 This means that there is no dimension on the argument to 'shape' ⍴. Scalars are
 dimension-less in APL.
 
-We now have the recipe for the score calculation, and we can define our d-fn.
+We now have the recipe for the score calculation, and we can define our direct function.
 
 #+BEGIN_EXAMPLE
-      score ← { ⎕ML←3 ⋄ words←(' '≠⍵)⊂⍵ ⋄ +/+/words∘.≡dictionary}
+      score ← { ws ← words ⍵ ⋄ +/+/ws∘.≡dictionary}
 #+END_EXAMPLE
 
 Remember that this is semantically equivalent to the following multi-line definition.
 
 #+BEGIN_EXAMPLE
-      score ← { ⎕ML←3
-                words←(' '≠⍵)⊂⍵
-                +/+/words∘.≡dictionary
+      score ← { ws ← words ⍵
+                +/+/ws∘.≡dictionary
               }
 #+END_EXAMPLE
 
@@ -690,7 +685,7 @@ function.
       ⎕vr ¨ 'break' 'caesar' 'score' 'rotate' 'indices_in_alphabet'
       ∇ break←{rs←-⍳26 ⋄ ss← score ¨ rs caesar ¨ ⊂⍵ ⋄ ¯1×1↑⍒ss}
       ∇ caesar←{rotated←(rotate ⍺),' ' ⋄ rotated[indices_in_alphabet ⍵]}
-      ∇ score←{⎕ML←3 ⋄ words←(' '≠⍵)⊂⍵ ⋄ +/+/words∘.≡dictionary}
+      ∇ score←{ ws ← words ⍵ ⋄ +/+/ws∘.≡dictionary}
       ∇ rotate←{⍵⌽alphabet}
       ∇ indices_in_alphabet←{alphabet⍳⍵}
 #+END_EXAMPLE
