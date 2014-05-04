@@ -867,15 +867,40 @@ Now, the grande finale.
 thefirstincarnationofwhatwaslatertobetheapl...(lots of text)
 #+END_EXAMPLE
 
+You will notice on interesting thing, that english is next to distance in what is called
+composed with (jot =∘=). This means that we compose a function with an argument so that
+it has already been given an argument (this is the same as Currying). Observe the following
+examples. First, we try to (incorrectly) calculate the distance from 2 2 to each of 3 3, 2 2 and 1 1.
 
+#+BEGIN_EXAMPLE
+      (2 2) distance ¨ (3 3) (2 2) (1 1)
+LENGTH ERROR
+      (2 2)distance¨(3 3)(2 2)(1 1)
+     ∧
+#+END_EXAMPLE
 
-----------------------------------------------------------------------
-----------------------------------------------------------------------
-TODO: Mention and describe composition ∘ so that we learn this.
-And mention that (⊂english) would have worked as well.
-          ∘.caesar will also have to change into caesar ¨
+But this fails, and we pass a direct function to the each =¨= which works well.
 
+#+BEGIN_EXAMPLE
+      { (2 2) distance ⍵ } ¨ (3 3) (2 2) (1 1)
+1.414213562 0 1.414213562
+#+END_EXAMPLE
 
+However, this is the same as passing a function which takes one argument, right?
+So we create this function by composition, 'gluing' the left argument to distance
+and passing this to each =¨=, this is done with jot =∘=.
+
+#+BEGIN_EXAMPLE
+      (2 2)∘distance ¨ (3 3) (2 2) (1 1)
+1.414213562 0 1.414213562
+#+END_EXAMPLE
+
+The same effect can be achieved by enclosing the array 2 2 first.
+
+#+BEGIN_EXAMPLE
+      (⊂2 2) distance ¨ (3 3) (2 2) (1 1)
+1.414213562 0 1.414213562
+#+END_EXAMPLE
 
 The difference to the prior algorithm is that we have frequency on 'each' ¨ result, and 
 use 'grade-up' ⍋ to get the indices in an ascending order.
