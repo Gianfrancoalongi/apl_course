@@ -655,7 +655,6 @@ function.
       ∇ indices_in_alphabet←{alphabet⍳⍵}
 #+END_EXAMPLE
 
-
 ** Breaking the securer caesar cipher
 
 There is one thing that can be done to make the caesar cipher slightly trickier
@@ -696,16 +695,9 @@ a text, and then divide this by the length of the text.
 We utilize the outer product once again, with the alphabet; in the example below,
 we do the following: for each of the 26 letters in the alphabet, perform array
 comparison with the given text to the left, letter by letter inside it.
-I produce a binary 26 by 30 matrix from this result with 'mix' ↑.
-
-----------------------------------------------------------------------
-----------------------------------------------------------------------
-TODO: No need for the enclose and the mix ↑. Remove this from here 
-and from the other places where the same code is shown.
-
 
 #+BEGIN_EXAMPLE
-      ↑ alphabet ∘.= ⊂'abbacuswasatoolforcalculations'
+      alphabet ∘.= 'abbacuswasatoolforcalculations'
 1 0 0 1 0 0 0 0 1 0 1 0 0 0 0 0 0 0 0 1 0 0 0 0 1 0 0 0 0 0
 0 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 1 0 0 0 0 0 0 0 0
@@ -737,23 +729,24 @@ and from the other places where the same code is shown.
 what remains now, is to sum the 1's for each row, this is plus-reduce again.
 
 #+BEGIN_EXAMPLE
-      +/ ↑ alphabet ∘.= ⊂'abbacuswasatoolforcalculations'
+      +/ alphabet ∘.= 'abbacuswasatoolforcalculations'
 6 2 3 0 0 1 0 0 1 0 0 3 0 1 4 0 0 1 3 2 2 0 1 0 0 0
 #+END_EXAMPLE
 
-we can now see that there are 6 a's in the text, 2 b's etc. We now need to divide
-by the length of the text in question.
+we can now see that there are 6 a's in the text, 2 b's etc, what now remains is to 
+divide by the length of the text in question, we do this by a direct function
+and passing the text.
 
 #+BEGIN_EXAMPLE
-     (+/ ↑ alphabet ∘.= ⊂'abbacuswasatoolforcalculations')÷⍴'abbacuswasatoolforcalcula
+     { (+/ alphabet ∘.= ⍵) ÷ ⍴⍵ } 'abbacuswasatoolforcalculations'
 0.2 0.06666666667 0.1 0 0 0.03333333333 0 0 0.03333333333 0 0 0.1 0 0.03333333333......
 #+END_EXAMPLE
 
-We can now put this into a direct function (d-fn) and amaze at the conciseness.
+Let us name this frequency, and amaze at the conciseness.
 
 #+BEGIN_EXAMPLE
-      frequency ← { (+/↑alphabet∘.=⊂⍵)÷⍴⍵ }
-      frequency ⊃,/ text
+      frequency ← { (+/alphabet∘.=⍵)÷⍴⍵ }
+      frequency text
 0.1029411765 0.01470588235 0.03571428571 ......
 #+END_EXAMPLE
 
@@ -878,7 +871,7 @@ The full listing for this frequency breaking are shown below.
 ⎕vr ¨ 'freq_break' 'distance' 'frequency' 'caesar' 'rotate' 'indices_in_alphabet'
 ∇ freq_break←{rs←-⍳26 ⋄ ds←english∘distance ¨ frequency ¨ rs caesar ¨ ⊂⍵ ⋄ ¯1×1↑⍋ds}
 ∇ distance←{sqd←(⍺-⍵)*2 ⋄ sum←+/sqd ⋄ sum*0.5}
-∇ frequency←{(+/↑alphabet∘.=⊂⍵)÷⍴⍵}
+∇ frequency←{ ( +/ alphabet ∘.= ⍵ ) ÷ ⍴⍵ }
 ∇ caesar←{rotated←(rotate ⍺),' ' ⋄ rotated[indices_in_alphabet ⍵]}
 ∇ rotate←{⍵⌽alphabet}
 ∇ indices_in_alphabet←{alphabet⍳⍵}
