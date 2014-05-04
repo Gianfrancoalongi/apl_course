@@ -452,13 +452,56 @@ We can once again use 'shape' ⍴ to verify this, or 'tally' ≢.
 5
 #+END_EXAMPLE
 
+Before we progress further, let me take a brief moment and describe the difference
+between shape (monadic rho) =⍴= and tally (monadic not equal underbar) =≢=.
+Shape returns an integer vector representing the dimensions of the right argument.
+Observe the result for a scalar, an array, a matrix and a cube.
 
+#+BEGIN_EXAMPLE
+      (scalar array matrix cube)←1 (⍳10) (2 2⍴⍳4) (3 2 2⍴⍳8)
+      ⍴ scalar
 
-----------------------------------------------------------------------
-----------------------------------------------------------------------
-TODO: Add description on difference between ≢ and ⍴.
-Do everything with rank.
+      ⍴ array
+10
+      ⍴ matrix
+2 2
+      ⍴ cube
+3 2 2
+#+END_EXAMPLE
 
+Note how the result of shape on a scalar is an empty vector. A common concept when
+talking about the shape of something, is to talk about the rank. rank is defined 
+as the shape of the shape. Observe the ranks of these results.
+
+#+BEGIN_EXAMPLE
+      ⍴⍴ scalar
+0
+      ⍴⍴ array
+1
+      ⍴⍴ matrix
+2
+      ⍴⍴ cube
+3
+#+END_EXAMPLE
+
+Now contrast this with tally =≢=, tally will always return a simple scalar indicating
+the amount of major cells of the right argument - or equally correct: the length of the
+leading axis xor 1 if the right argument is a scalar. Observe the tally of a scalar,
+a matrix and a cube. The major cells for a vector are the elements. The major cells of
+a matrix are its rows, and the major cells of a cube are the matrices along the first 
+dimension.
+
+#+BEGIN_EXAMPLE
+      (scalar array matrix cube)←1 (⍳10) (2 2⍴⍳4) (3 2 2⍴⍳8)
+      ≢ scalar
+1
+      ≢ array
+10
+      ≢ matrix
+2
+      ≢ cube
+3
+#+END_EXAMPLE
 
 ----------------------------------------------------------------------
 ----------------------------------------------------------------------
