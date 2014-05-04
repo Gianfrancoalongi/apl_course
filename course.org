@@ -752,19 +752,47 @@ Let us name this frequency, and amaze at the conciseness.
 
 Next up, we need to compare how close a measured letter frequency is to the english 
 letter frequency, for that we need the english letter frequency (which I happen to have added).
+When we copied the workspace =frequency.ws= with the system function =⎕CY= we also 
+got the variable =english= which contains an array of english monogram letter frequencies.
+Take a look at it by reshaping it as a 13 2 matrix after concatenating it with the alphabet.
 
+#+BEGIN_EXAMPLE
+     13 2 ⍴ alphabet ,¨  english
+┌→────────┬─────────┐
+↓a 0.08167│b 0.01492│
+├+───────→┼+───────→┤
+│c 0.02782│d 0.04253│
+├+───────→┼+───────→┤
+│e 0.12702│f 0.02228│
+├+───────→┼+───────→┤
+│g 0.02015│h 0.06094│
+├+───────→┼+───────→┤
+│i 0.06966│j 0.00153│
+├+───────→┼+───────→┤
+│k 0.00772│l 0.04025│
+├+───────→┼+───────→┤
+│m 0.02406│n 0.06749│
+├+───────→┼+───────→┤
+│o 0.07507│p 0.01929│
+├+───────→┼+───────→┤
+│q 0.00095│r 0.05987│
+├+───────→┼+───────→┤
+│s 0.06327│t 0.09056│
+├+───────→┼+───────→┤
+│u 0.02758│v 0.00978│
+├+───────→┼+───────→┤
+│w 0.0236 │x 0.0015 │
+├+───────→┼+───────→┤
+│y 0.01974│z 0.00074│
+└+───────→┴+───────→┘
+#+END_EXAMPLE
 
-
-----------------------------------------------------------------------
-----------------------------------------------------------------------
-TODO: Where does the variable english come from? Explain and show.
-Perhaps put it into the same workspace as the text will be in.
-
-
+However, when working with the array =english= we want it just as a pure floating point
+array (as it is).
 
 #+BEGIN_EXAMPLE
       english
-0.08167 0.01492 0.02782 0.04253 0.12702 0.02228 0.02015 0.06094 0.06966 0.00153 0.00772 0.04025 0.02406 0.06749 0.07507 0.01929 0.00095 0.05987 0.06327 0.09056 0.02758 0.00978 0.0236 0.0015 0.01974 0.00074
+0.08167 0.01492 0.02782 0.04253 0.12702 0.02228 .....
 #+END_EXAMPLE
 
 Now we can write the d-fn for performing the calculation of euclidean distance between two vectors.
