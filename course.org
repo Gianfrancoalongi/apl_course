@@ -678,69 +678,17 @@ caesar cipher is thus
     probable key.
 #+END_EXAMPLE
 
-Lets start by creating our cleartext.
+Lets start by copying our cleartext from a predefined workspace called frequency.ws.
+We do this by utilizing the system function Copy =⎕CY= which will copy all or just the
+named object from another workspace (if any names are passed as the left argument).
 
 #+BEGIN_EXAMPLE
-   text ← ⊂'thefirstincarnationofwhatwaslatertobetheaplprogramminglanguagewaspublishedand'
-   text,← ⊂'formalizedinaprogramminglanguageabookdescribinganotationinventedbykennetheiverson'
-   text,← ⊂'whileatharvarduniversityiversonhaddevelopedamathematicalnotationformanipulating'
-   text,← ⊂'arraysthathetaughttohisstudentsiversondescribedthepremiseofthebookinthepreface'
-   text,← ⊂'appliedmathematicsislargelyconcernedwiththedesignandanalysisofexplicitprocedures'
-   text,← ⊂'forcalculatingtheexactorapproximatevaluesofvariousfunctionssuchexplicitprocedures'
-#+END_EXAMPLE
-
-----------------------------------------------------------------------
-TODO: Let us not create this nested vector, instead just put the whole
-text in, so just put the prepared text into a workspace and copy it from
-there, then we don't need all of this that follows.
-The student can then explore the text using shape, etc.
-Maybe count the number of e's and the total amount of letters.
-
-
-This should be enough. Notice that we perform 6 element assignments into the array text
-which now holds 6 texts. The first assignment asigns an enclosed array (thus becoming a scalar)
-to text. The second assignment is a special, called 'modified assignment' ,←.
-text now holds six elements, each element being an array, we can verify this by looking
-at the shape and 'depth' ≡ of text.
-
-#+BEGIN_EXAMPLE
-      ⍴ text
-6
-      ≡ text
-2
-#+END_EXAMPLE
-
-we can now count the length of each string in text, by utilizing 'each' ¨ and shape.
-
-#+BEGIN_EXAMPLE
-      ⍴ ¨ text
- 77  81  79  78  80  81
-#+END_EXAMPLE
-
-this means, that if we concatenate all strings in text, we should end up with one 
-single string of length 476. In order to concatenate all the strings, we utilize
-'comma-reduce' ,/ which reduces along the first dimension with comma; comma is catenation.
-
-#+BEGIN_EXAMPLE
-      ,/ text
- thefirstincarnatio.....(a lot of text)
-      ⍴ ⊃ ,/ text
+   ⎕CY './frequency.ws'
+   ⍴text
 476
+   text
+thefirstincarnationofwhatwaslatertobet.....
 #+END_EXAMPLE
-
-You noticed that I 'disclosed' ⊃ the result from ,/ before applying shape.
-This is because all reductions with the operator / and some function produce a scalar result.
-
-
-----------------------------------------------------------------------
-----------------------------------------------------------------------
-TODO: Explain that ⎕/ will produce a result of one dimension less than 
-the left input argument (which we can couple to the name: REDUCTION).
-APL is very  consistent in that you can predict the shape of the result.
-At this point it could be worth to introduce shape and rank.
-
-
-But we wish to work on the actual array, therefore we disclose it.
 
 What we need now, is a d-fn for measuring letter frequency in a text.
 For each letter in the alphabet, we wish to count the amount of times it occurrs in 
@@ -749,8 +697,6 @@ We utilize the outer product once again, with the alphabet; in the example below
 we do the following: for each of the 26 letters in the alphabet, perform array
 comparison with the given text to the left, letter by letter inside it.
 I produce a binary 26 by 30 matrix from this result with 'mix' ↑.
-
-
 
 ----------------------------------------------------------------------
 ----------------------------------------------------------------------
