@@ -821,38 +821,35 @@ carthesian products in the range (1 1) to (10 10). We can easily produce all suc
  10 1  10 2  10 3  10 4  10 5  10 6  10 7  10 8  10 9  10 10
 #+END_EXAMPLE
 
-let us now perform outer product with distance to 1 1.
-
-----------------------------------------------------------------------
-----------------------------------------------------------------------
-TODO: 2 ⍕ to display so  that we get two decimals.
-
+let us now perform outer product with distance to 1 1 (and produce a text result 
+where the numbers are rounded to two decimals, with the use of format by specification 
+(down tack jot) =⍕=).
 
 #+BEGIN_EXAMPLE
-       (⍳ (10 10)) ∘.distance ⊂(1 1)
-0 1           2           3           4            5            6            7            8            9
-1 1.414213562 2.236067977 3.16227766  4.123105626  5.099019514  6.08276253   7.071067812  8.062257748  9.055385138
-2 2.236067977 2.828427125 3.605551275 4.472135955  5.385164807  6.32455532   7.280109889  8.246211251  9.219544457
-3 3.16227766  3.605551275 4.242640687 5            5.830951895  6.708203932  7.615773106  8.544003745  9.486832981
-4 4.123105626 4.472135955 5           5.656854249  6.403124237  7.211102551  8.062257748  8.94427191   9.848857802
-5 5.099019514 5.385164807 5.830951895 6.403124237  7.071067812  7.810249676  8.602325267  9.433981132 10.29563014
-6 6.08276253  6.32455532  6.708203932 7.211102551  7.810249676  8.485281374  9.219544457 10           10.81665383
-7 7.071067812 7.280109889 7.615773106 8.062257748  8.602325267  9.219544457  9.899494937 10.63014581  11.40175425
-8 8.062257748 8.246211251 8.544003745 8.94427191   9.433981132 10           10.63014581  11.3137085   12.04159458
-9 9.055385138 9.219544457 9.486832981 9.848857802 10.29563014  10.81665383  11.40175425  12.04159458  12.72792206
+      2 ⍕ (⍳ 10 10) distance ¨ ⊂(1 1)
+ 0.00 1.00 2.00 3.00 4.00  5.00  6.00  7.00  8.00  9.00
+ 1.00 1.41 2.24 3.16 4.12  5.10  6.08  7.07  8.06  9.06
+ 2.00 2.24 2.83 3.61 4.47  5.39  6.32  7.28  8.25  9.22
+ 3.00 3.16 3.61 4.24 5.00  5.83  6.71  7.62  8.54  9.49
+ 4.00 4.12 4.47 5.00 5.66  6.40  7.21  8.06  8.94  9.85
+ 5.00 5.10 5.39 5.83 6.40  7.07  7.81  8.60  9.43 10.30
+ 6.00 6.08 6.32 6.71 7.21  7.81  8.49  9.22 10.00 10.82
+ 7.00 7.07 7.28 7.62 8.06  8.60  9.22  9.90 10.63 11.40
+ 8.00 8.06 8.25 8.54 8.94  9.43 10.00 10.63 11.31 12.04
+ 9.00 9.06 9.22 9.49 9.85 10.30 10.82 11.40 12.04 12.73
 #+END_EXAMPLE
 
 The last thing we need to do now, is to combine all of this, just like we did for the lookup attack.
-But, let's generate a random key and produce a cipher from the concatenated text.
+But, let's generate a random key and produce a cipher from the text.
 
 #+BEGIN_EXAMPLE
       key←?26
-      cipher←key caesar ⊃,/text
+      cipher←key caesar text
       cipher
 kyvwzijkzetrie.....(a lot of text)
 #+END_EXAMPLE
 
-notice how the old break d-fn will not work on this.
+notice how the old break will not work on this.
 
 #+BEGIN_EXAMPLE
       break cipher
