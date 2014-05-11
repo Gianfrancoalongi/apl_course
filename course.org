@@ -2294,15 +2294,13 @@ and write to the file, we use =⎕ntie= for tieing the file.
 ¯1
 #+END_EXAMPLE
 
-----------------------------------------------------------------------
-TODO: Native files have negative tie numbers and component files have 
-      positive numbers.
-
-The =¯1= indicates that this is a so called 'native file'. Native files
-refer to non-Dyalog APL files, another type of files which Dyalog APL 
-can work with, is so called Component Files which can contain Dyalog APL 
-objects. We can now query the size of the file we are tied to.
-This is done using =⎕nsize=, this is the amount of bytes in the file.
+The =¯1= indicates that this is a so called 'native file', we know this
+because all Native Files have negative tie numbers, and all Component Files
+have positive tie numbers. Native files refer to non-Dyalog APL files, the 
+other type of files (Component Files) are Dyalog APL specific and contain arrays,
+they are sometimes also referred to as Arrays Stores. 
+We can now query the size of the file we are tied to by utilizing the tie as
+an input argument to the system function =⎕nsize=, this is the amount of bytes in the file.
 
 #+BEGIN_EXAMPLE
       ⎕nsize tie
