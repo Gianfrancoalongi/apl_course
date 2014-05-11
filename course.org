@@ -2386,11 +2386,6 @@ loads your SALT script, but it worked for you as some variable was global.
 The issue of 'leaking variables' is handled automatically with dynamic functions (d-fns), 
 since all referenced variables which are not global are kept inside the d-fn.
 
-----------------------------------------------------------------------
-TODO: Discuss tradfun vs dfuns <-- they where added as a functional extension
-      to Dyalog APL.
-
-
 #+BEGIN_EXAMPLE     
      Return variable declaration
        |      Function name
@@ -2399,6 +2394,10 @@ TODO: Discuss tradfun vs dfuns <-- they where added as a functional extension
        ↓        ↓       ↓    ↓
      ∇ Z←  read_file  path ;tie
 #+END_EXAMPLE
+
+----------------------------------------------------------------------
+TODO: Discuss tradfun vs dfuns <-- they where added as a functional extension
+      to Dyalog APL.
 
 We check that the function is sound by invoking it with the path to the voting data.
 And putting the result into content and inquiring the dimension of the text array by
