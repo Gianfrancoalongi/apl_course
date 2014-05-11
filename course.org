@@ -2395,9 +2395,9 @@ since all referenced variables which are not global are kept inside the d-fn.
      ∇ Z←  read_file  path ;tie
 #+END_EXAMPLE
 
-----------------------------------------------------------------------
-TODO: Discuss tradfun vs dfuns <-- they where added as a functional extension
-      to Dyalog APL.
+D-fns (dynamic functions) where added as a functional extension to Dyalog APL.
+As such, d-fns are very suitable for compilation and optimization by the Dyalog APL
+environment.
 
 We check that the function is sound by invoking it with the path to the voting data.
 And putting the result into content and inquiring the dimension of the text array by
