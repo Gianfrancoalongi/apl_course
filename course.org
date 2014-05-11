@@ -2378,10 +2378,15 @@ which is =read_file=, after this follows the argument name (if any), which is =p
 An optional variable declaration list comes after this, which is preceeded by semicolon
 =;=.
 
+A very important aspect of the Internal Variable Declaration list in the tradfun syntax,
+is that variables which are not part of the varaiable declaration list, but are referenced
+in the tradfun, will become global! This is a common source of errors as the variables can
+'leak out' of the tradfun; symptoms of this are that tests fail when someone else
+loads your SALT script, but it worked for you as some variable was global. 
+The issue of 'leaking variables' is handled automatically with dynamic functions (d-fns), 
+since all referenced variables which are not global are kept inside the d-fn.
 
 ----------------------------------------------------------------------
-TODO: mention that variables that are not 'scoped' by the list of variables
-      will become global and 'leak'.
 TODO: Discuss tradfun vs dfuns <-- they where added as a functional extension
       to Dyalog APL.
 
