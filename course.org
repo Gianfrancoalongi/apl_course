@@ -2180,11 +2180,6 @@ swedish municipalities voted on these parties through the years
 ------------------------------------------------------------
 TODO: Use KEY for this (⎕UCS 9016) ⌸ <------
 
-
-----------------------------------------------------------------------
-TODO: Mention that Dyalog APL is extremely efficient when working with
-binary data.
-
 ** Create the SALT Script from within the Dyalog APL environment
 In the Chapter 'A Tiny Booking DSL', we created the SALT script from outside
 the Dyalog APL environment and then loaded it using =⎕SE.SALT.Load=.
