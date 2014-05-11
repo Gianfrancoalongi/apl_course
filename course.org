@@ -1254,23 +1254,6 @@ What if we could type the following and actually get what we expect?
       book first free on friday for 3 from 2
 #+END_EXAMPLE
 
-
-
-----------------------------------------------------------------------
-----------------------------------------------------------------------
-TODO: It would be nicer if the functions would set the necessary
-data in some kind of internal structure which is passed as the final
-result to 'book' which then does the full computations.
-Like a matrix or a class.
-
-
-
-----------------------------------------------------------------------
-----------------------------------------------------------------------
-TODO: The booking system is dateless, how would this be implemented.
-
-
-
 In case you don't really follow the intention of the above, it means
 to book the first freely available room on friday for 3 hours if 
 possible from the second hour and onwards.
@@ -2157,6 +2140,17 @@ TODO: Describe the limitations and what would need to be
 changed in order to make this more flexible and more solid,
 especially data structures and data flow. Revisit the DSL 
 in a later chapter and use Mortens version for the later version.
+
+----------------------------------------------------------------------
+----------------------------------------------------------------------
+TODO: It would be nicer if the functions would set the necessary
+data in some kind of internal structure which is passed as the final
+result to 'book' which then does the full computations.
+Like a matrix or a class.
+
+----------------------------------------------------------------------
+----------------------------------------------------------------------
+TODO: The booking system is dateless, how would this be implemented.
 
 * Voting Analysis of Swedish Municipalities
 We will now read a CSV (Comma Separated Values) file which I downloaded
