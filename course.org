@@ -1,4 +1,4 @@
-* APL by example, an inductive course for the curious mind.
+ APL by example, an inductive course for the curious mind.
 
 The target audience for this course, is anyone who is curious.
 You will be immediately thrown into Dyalog APL with expressions you can
@@ -2152,12 +2152,33 @@ it looks like this
 :EndNameSpace
 #+END_EXAMPLE
 
+------------------------------------------------------------
+TODO: Describe the limitations and what would need to be
+changed in order to make this more flexible and more solid,
+especially data structures and data flow. Revisit the DSL 
+in a later chapter and use Mortens version for the later version.
+
 * Voting Analysis of Swedish Municipalities
 We will now read a CSV (Comma Separated Values) file which I downloaded
 from SCB (Statistiska Centralbyran; the swedish statistics bureau). 
 It contains 2329 lines of data on 8 swedish parties and how different
 swedish municipalities voted on these parties through the years 
 1973,1976,1979,1982,1985,1988,1991,1994,1998,2002,2006,2010.
+
+
+------------------------------------------------------------
+TODO: Use KEY for this (⎕UCS 9016) ⌸ <------
+
+
+----------------------------------------------------------------------
+TODO: No ⎕ML !! Not even desribe it. It's just remainders of history.
+⎕ML and ⎕WX are backawards compatibility details so that it can be fixed
+anywhere. Providing backwards compatibility. 
+
+
+----------------------------------------------------------------------
+TODO: Mention that Dyalog APL is extremely efficient when working with
+binary data.
 
 ** Create the SALT Script from within the Dyalog APL environment
 In the Chapter 'A Tiny Booking DSL', we created the SALT script from outside
@@ -2274,9 +2295,13 @@ and write to the file, we use =⎕ntie= for tieing the file.
 ¯1
 #+END_EXAMPLE
 
+----------------------------------------------------------------------
+TODO: Native files have negative tie numbers and component files have 
+      positive numbers.
+
 The =¯1= indicates that this is a so called 'native file'. Native files
 refer to non-Dyalog APL files, another type of files which Dyalog APL 
-can work with, is so called Object Files which can contain Dyalog APL 
+can work with, is so called Component Files which can contain Dyalog APL 
 objects. We can now query the size of the file we are tied to.
 This is done using =⎕nsize=, this is the amount of bytes in the file.
 
@@ -2356,6 +2381,15 @@ which is =read_file=, after this follows the argument name (if any), which is =p
 An optional variable declaration list comes after this, which is preceeded by semicolon
 =;=.
 
+
+----------------------------------------------------------------------
+TODO: Tradfun (traditional function) not the first User Defined Function.
+TODO: mention that variables that are not 'scoped' by the list of variables
+      will become global and 'leak'.
+TODO: Discuss tradfun vs dfuns <-- they where added as a functional extension
+      to Dyalog APL.
+
+
 #+BEGIN_EXAMPLE     
      Return variable declaration
        |      Function name
@@ -2401,6 +2435,11 @@ which has ASCII code 10. We can use the Unicode Convert function =⎕UCS= to
 recreate any character based on it's numeric code, and thus, we can match
 all carriage returns with (⎕UCS 10), allowing us to count the amount of
 newlines in the file.
+
+--------------------------------------------------------------------
+TODO: Reuse the split function from chapter 2 to use here and split.
+
+
 
 #+BEGIN_EXAMPLE
       +/ contents = ⎕UCS 10
@@ -2519,6 +2558,10 @@ and the amount of votes for this party during the different years.
 We can thus split the input, but based on comma this time, using =⎕ML←3=.
 I will turn on boxing which makes it easy to see the resulting arrays.
 
+------------------------------------------------------------
+TODO: Do not use ⎕ML 3 again!
+
+
 #+BEGIN_EXAMPLE
       ]box on
 Was OFF
@@ -2576,6 +2619,11 @@ But this is not really enough, we need to convert vote amounts into integers fro
 arrays which they are now. We can actually see how different things are represented
 internally in Dyalog APL by using 'data representation' =⎕DR=, let us observe the results
 for a floating points number, an integer, an integer array and an integer matrix.
+
+------------------------------------------------------------
+TODO: Describe that ⎕DR is to be interpreted as two digits.
+      First is the amount of bits, and second is the type.
+
 
 #+BEGIN_EXAMPLE
       0.1 1 (⍳4) (2 2⍴⍳4)
@@ -2736,6 +2784,12 @@ What we would like to do is the following
 
 But, doing this exposes an error (or as I like so say; an interesting situation).
 
+
+------------------------------------------------------------
+TODO: Switch to ⎕VFI (Verify and Fix input) 
+TODO: Explain the vulnerability issues with ⍎ in general.
+
+
 #+BEGIN_EXAMPLE
      ⍴ ↑ parse∘words ¨ lines #.contents
 ⍎SYNTAX ERROR
@@ -2870,7 +2924,17 @@ and the final check that this is working as expected (2329 rows and 14 columns)
       ⍴ to_table read_file './ME0104B6.csv'
 2329 14
 #+END_EXAMPLE
+
+
+------------------------------------------------------------
+TODO: Do I really need to ⎕vr all the functions or just enough
+      to show the definition?
+
 ** Analysis of table data
+
+------------------------------------------------------------
+TODO: ⍳ ≢ and not ⍳⊃⍴ 
+
 
 We now have a reliable and fast way of parsing the voting data into a
 table, which will allow us to perform queries and analyze the vote
@@ -3022,6 +3086,13 @@ the ranked list. Let's start by assining the current result to votes
 Next we calculate the percentage of the votes for every party as they
 are in the first column, by summing the total votes and doing division
 with the sum; let us start with the first year (1973).
+
+
+------------------------------------------------------------
+TODO: Calculating the percentage will not change the order between 
+      the votes.
+TODO: All divide by votes are unnecessary.
+
 
 #+BEGIN_EXAMPLE
       votes[;2]
