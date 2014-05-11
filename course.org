@@ -2355,10 +2355,10 @@ As we are not so interested in the tie (the filedescriptor), but the contents
 of the file, we put the tieing, reading and untieing into a function and just 
 get the contents of the file.
 
-We will now write our first User Defined Function, it will be called =read_file=
-and accept the filepath as the right argument, it will be written inside the
-analysis namespace (write #.analysis and press Ctrl-e to edit). As usual, I will
-show what the result looks like when I am done, using vector representation =⎕vr=.
+We will now write our first so called Traditional Defined Function (Tradfun), 
+it will be called =read_file= and accept the filepath as the right argument, 
+it will be written inside the analysis namespace (write #.analysis and press Ctrl-e to edit). 
+As usual, I will show what the result looks like when I am done, using vector representation =⎕vr=.
 
 #+BEGIN_EXAMPLE
       ⎕vr '#.analysis.read_file'
@@ -2369,8 +2369,8 @@ show what the result looks like when I am done, using vector representation =⎕
      ∇
 #+END_EXAMPLE
 
-As this is the first time you see the User Defined Function format, I will 
-mention some interesting aspects. All User Defined Functions start and end with a line
+As this is the first time you see the Traditional Defined Function (Tradfun) format, I will 
+mention some interesting aspects. All tradfuns start and end with a line
 starting with 'del' (also known as carrot) =∇=. After this we show which variable
 (if any) will hold the return value, in this case =Z= will be assigned the return value
 of this function. Next on the same line as the first carrot, we have the function name,
@@ -2380,7 +2380,6 @@ An optional variable declaration list comes after this, which is preceeded by se
 
 
 ----------------------------------------------------------------------
-TODO: Tradfun (traditional function) not the first User Defined Function.
 TODO: mention that variables that are not 'scoped' by the list of variables
       will become global and 'leak'.
 TODO: Discuss tradfun vs dfuns <-- they where added as a functional extension
