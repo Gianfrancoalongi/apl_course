@@ -2135,22 +2135,39 @@ it looks like this
 :EndNameSpace
 #+END_EXAMPLE
 
-------------------------------------------------------------
-TODO: Describe the limitations and what would need to be
-changed in order to make this more flexible and more solid,
-especially data structures and data flow. Revisit the DSL 
-in a later chapter and use Mortens version for the later version.
+** Limitations and further work
 
-----------------------------------------------------------------------
-----------------------------------------------------------------------
-TODO: It would be nicer if the functions would set the necessary
-data in some kind of internal structure which is passed as the final
-result to 'book' which then does the full computations.
-Like a matrix or a class.
+As we have seen, it is very easy to write a DSL by using Dyalg APL,
+however, this does not mean that the DSL which was easy to produce is
+necessarily well designed. There are several things to consider, and 
+one should not ignore these areas of concern without much afterthought.
+This sub-chapter is a brief discussion on the design and development
+of DSLs.
 
-----------------------------------------------------------------------
-----------------------------------------------------------------------
-TODO: The booking system is dateless, how would this be implemented.
+The DSL we developed was overly simplistic in that it was a mere vehicle
+for your comprehension and the grammar is very rigid. It is also very hard
+to extend as every function is extremely specific, and there is no underlying
+data-model. Such a DSL as presented in this chapter is referred to as a
+fully embedded DSL, it is defined and governed by functions in the underlying
+language we are building it from.
+
+We will revisit the DSL concept and implementation in a later chapter,
+and follow through with a more structured approach in which we will think
+of the data model, the grammar and the flexibility, before we get going.
+
+Things to consider, what if we would like to be able to have more or fewer
+conditions? What if I would like to be able to express the following?
+
+#+BEGIN_EXAMPLE
+   book first free before 1330 or after 1530 for 2 hours on monday or wednesday
+#+END_EXAMPLE
+
+Would it not make sense for the user to be able to type in the disjunct 
+conditions in any order? For example this should also be possible to type
+
+#+BEGIN_EXAMPLE
+   book first free after 1530 or before 1330 for 2 hours on wednesday or monday
+#+END_EXAMPLE
 
 * Voting Analysis of Swedish Municipalities
 We will now read a CSV (Comma Separated Values) file which I downloaded
