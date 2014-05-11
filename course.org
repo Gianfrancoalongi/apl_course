@@ -2182,12 +2182,6 @@ TODO: Use KEY for this (⎕UCS 9016) ⌸ <------
 
 
 ----------------------------------------------------------------------
-TODO: No ⎕ML !! Not even desribe it. It's just remainders of history.
-⎕ML and ⎕WX are backawards compatibility details so that it can be fixed
-anywhere. Providing backwards compatibility. 
-
-
-----------------------------------------------------------------------
 TODO: Mention that Dyalog APL is extremely efficient when working with
 binary data.
 
@@ -2245,8 +2239,8 @@ We can do this ourselves in the shell in the following way
 2
 #+END_EXAMPLE
 
-Let me take a brief moment and explain the two most interesting system
-properties first (=⎕IO= and =⎕ML=).
+Let me take a brief moment and explain the most interesting system
+property first =⎕IO=.
 
 : ⎕IO 
 
@@ -2272,13 +2266,12 @@ qua
 
 APL developers can go to great lengths in religious battles regarding =⎕IO←1=
 or =⎕IO←0=. However, the Dyalog APL standard is =⎕IO←1=.
-
-: ⎕ML
-
-'Quad ML' is the Migration Level of the Dyalog APL system. The Migration Level
-can be changed to support different dialects of APL. Changing the Migration Level
-from 1, will change the way some functions work. We will use =⎕ML←3= later when
-splitting arrays based on a token element. 
+=⎕ML= 'Quad ML' is the Migration Level of the Dyalog APL system. Ignore this completely
+as it is no more than a historical remnant for backwards compatibility purposes
+and shall have no meaning in your life whatsoever. This also goes for =⎕WX= 
+'Quad WX', so please ignore =⎕ML= and =⎕WX=. The only reason for these System Variables
+to be assigned is to make sure the SALT script will work and behave the same 
+regardless of where we choose to fix it.
 
 From now on, all functions will be added to the =#.analysis= namespace, so 
 we can save our work in a proper version control system. 
@@ -3199,4 +3192,4 @@ most popular parties are =Socialdemokraterna=, =Moderaterna= and =Centerpartiet=
 
 
 
-  
+
