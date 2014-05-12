@@ -2173,8 +2173,8 @@ conditions in any order? For example this should also be possible to type
 We will now read a CSV (Comma Separated Values) file which I downloaded
 from SCB (Statistiska Centralbyran; the swedish statistics bureau). 
 It contains 2329 lines of data on 8 swedish parties and how different
-swedish municipalities voted on these parties through the years 
-1973,1976,1979,1982,1985,1988,1991,1994,1998,2002,2006,2010.
+swedish municipalities voted on these parties through the years 1973,1976,
+1979,1982,1985,1988,1991,1994,1998,2002,2006,2010.
 
 
 ------------------------------------------------------------
@@ -2379,7 +2379,7 @@ An optional variable declaration list comes after this, which is preceeded by se
 =;=.
 
 A very important aspect of the Internal Variable Declaration list in the tradfun syntax,
-is that variables which are not part of the varaiable declaration list, but are referenced
+is that variables which are not part of the variable declaration list, but are referenced
 in the tradfun, will become global! This is a common source of errors as the variables can
 'leak out' of the tradfun; symptoms of this are that tests fail when someone else
 loads your SALT script, but it worked for you as some variable was global. 
@@ -2400,7 +2400,7 @@ As such, d-fns are very suitable for compilation and optimization by the Dyalog 
 environment.
 
 We check that the function is sound by invoking it with the path to the voting data.
-And putting the result into content and inquiring the dimension of the text array by
+And putting the result into contents and inquiring the dimension of the text array by
 using shape (rho) =⍴= (do not print it to the screen!).
 
 #+BEGIN_EXAMPLE
@@ -2430,7 +2430,7 @@ when we look at it from outside the Dyalog APL environment.
 ** Parsing contents into lines
 We can now move on to parsing this and doing something useful with the
 contents. The interesting thing to realize now, is that the text array 
-in content contains all characters, including the line feed character \n 
+in contents contains all characters, including the line feed character \n 
 which has ASCII code 10. We can use the Unicode Convert function =⎕UCS= to 
 recreate any character based on it's numeric code, and thus, we can match
 all carriage returns with (⎕UCS 10), allowing us to count the amount of
@@ -2438,8 +2438,6 @@ newlines in the file.
 
 --------------------------------------------------------------------
 TODO: Reuse the split function from chapter 2 to use here and split.
-
-
 
 #+BEGIN_EXAMPLE
       +/ contents = ⎕UCS 10
