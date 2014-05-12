@@ -2463,69 +2463,39 @@ code for it.
 10
 #+END_EXAMPLE
 
-We can use what we have seen, together with 'partition' =⊂= from =⎕ML←3= to 
-break the contents into lines, this is usually what you want to do when reading 
-a file and parsing it.
+Let me get us back on track and reuse the previuosly developed words function
+from the Chapter 'Breaking the caesar cipher with a lookup attack' which split
+a text array into an array of words, and change it a little, so it instead splits
+the text array on line feed =⎕UCS 10=. The original d-fn definition was 
 
 #+BEGIN_EXAMPLE
-      ⍴ { ⎕ML←3 ⋄ lines←(contents≠⎕UCS 10)⊂contents ⋄ lines } ⍬
-2330
+          {t←' ',⍵⋄1↓¨(t=' ')⊂t}
 #+END_EXAMPLE
 
-I will go through the code inside the direct function (inside the { }'s) briefly, 
-line by line (remember that 'diamond' =⋄= is a line separator). 
-
-:    ⎕ML←3  
-
-This sets the Migration Level to 3. At Migration Level 3, we have access to the 
-IBM definition of =⊂= called 'partition', which is very convenient for splitting
-arrays.
-
-:    lines←(contents≠⎕UCS 10)⊂contents
-
-here we split the text array based on the binary array which is the result of 
-finding all non-carriage returns. Every array element will now be text arrays
-between the carriage returns - i.e the lines.
-
-:    lines
-
-This just returns the array of text-arrays. Note that I count the amount
-of elements by using shape =⍴=. We might as well extract the second line
-instead, by using 'pick' =⊃= with 2.
+we can call it lines instead and write it as
 
 #+BEGIN_EXAMPLE
-      2⊃ { ⎕ML←3 ⋄ lines←(contents≠⎕UCS 10)⊂contents ⋄ lines } ⍬
-
-0114 Upplands Väsby,Moderaterna,1918,2678,3860,5197,4978,4364,5831,.....
-#+END_EXAMPLE
-
-Let us assign this result to lines and count them using shape ⍴.
-
-#+BEGIN_EXAMPLE
-      lines ← { ⎕ML←3 ⋄ lines←(contents≠⎕UCS 10)⊂contents ⋄ lines } ⍬
-      ⍴lines
-2330
+          { t←(⎕UCS 10),⍵ ⋄ 1↓¨(t=⎕UCS 10)⊂t }
 #+END_EXAMPLE
 
 As we now seem to have a direct function for parsing file contents into single
 lines, we should save this into the =#.analysis= namespace with a proper name.
-I propose to name the function =lines=. Just to make the direct function more
-readable it will be a so called multilne direct function (a direct function 
-across multiple lines).
+I propose to name the function =lines=.
+Breaking the file contents into lines is usually what you want to do when reading 
+a file and parsing it. This d-fn will return an array of text-arrays. We can see
+it in action by invoking it, and taking the second line
 
 #+BEGIN_EXAMPLE
-      ⎕vr '#.analysis.lines'
-     ∇ lines←{⎕ML←3
-[1]        (⍵≠(⎕UCS 10))⊂⍵
-[2]    }
-     ∇
+      2 ⊃ #.analysis.lines contents
+
+0114 Upplands Väsby,Moderaterna,1918,2678,3860,5197,4978,4364,5831,.....
 #+END_EXAMPLE
 
-We can now try this again by verifying that we split into lines with the
-function and rho =⍴=.
+Let us assign this result to =content_lines= and count them using tally =≢=.
 
 #+BEGIN_EXAMPLE
-      ⍴#.analysis.lines contents
+      content_lines ← #.analysis.lines contents
+      ≢ content_lines
 2330
 #+END_EXAMPLE
 
@@ -2541,10 +2511,7 @@ The =#.analysis= namespace now contains
 [3]        ⎕NUNTIE tie
 [4]      ∇
 
-[0]      lines←{⎕ML←3
-[1]             (⍵≠(⎕UCS 10))⊂⍵
-[2]      }
-
+[0]      lines ← {t←(⎕UCS 10),⍵⋄1↓¨(t=⎕UCS 10)⊂t}
      :EndNamespace
 #+END_EXAMPLE
 
