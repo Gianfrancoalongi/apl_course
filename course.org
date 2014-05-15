@@ -2520,48 +2520,18 @@ The =#.analysis= namespace now contains
 Next, we wish to parse one line, each line consisting of a municipality
 code and the name of the municipality, followed by the swedish party name
 and the amount of votes for this party during the different years.
-We can thus split the input, but based on comma this time, using =⎕ML←3=.
+We can thus split the input, but based on comma this time.
 I will turn on boxing which makes it easy to see the resulting arrays.
-
-------------------------------------------------------------
-TODO: Do not use ⎕ML 3 again!
-
 
 #+BEGIN_EXAMPLE
       ]box on
 Was OFF
 #+END_EXAMPLE
 
-An interesting detail to remember is that  setting =⎕ML←3= inside the direct function 
-will ensure that the Migration Level is only changed within the execution environment
-of thast direct function and not change outside the direct function.
-We can see this with a small example on the Dyalog APL environment.
-
-#+BEGIN_EXAMPLE
-      ⎕ML
-1
-      { ⎕ML←3 ⋄ ⎕←'ML='⎕ML } ⍬
- ML=  3
-      ⎕ML
-1
-#+END_EXAMPLE
-
-The following example direct function pick's =⊃= the second array element from the lines and then 
-splits the line on comma.
-
-#+BEGIN_EXAMPLE
-      {⎕ML←3⋄(⍵≠',')⊂⍵} 2⊃ #.analysis.lines contents
-┌→──────────────────┬───────────┬────┬────┬────┬────┬────┬────┬────┬────┬────┬────┬────┬────┐
-│                   │Moderaterna│1918│2678│3860│5197│4978│4364│5831│5782│5901│3822│7326│8397│
-│0114 Upplands Väsby│           │    │    │    │    │    │    │    │    │    │    │    │    │
-└──────────────────→┴──────────→┴───→┴───→┴───→┴───→┴───→┴───→┴───→┴───→┴───→┴───→┴───→┴───→┘
-
-      ⍴ {⎕ML←3⋄(⍵≠',')⊂⍵} 2⊃ #.analysis.lines contents
-14
-#+END_EXAMPLE
-
-As we can see, we get a 14 element array from splitting a line into words, based on comma ','
-as the separator. Let us now assign this direct function to =words= in the =#.analysis= namespace.
+We can of course reuse the same basic =words= function, but this time 
+split on comma =,= instead. The following example direct function pick's =⊃= 
+the second array element from the lines and then splits the line on comma.
+Let us now assign this direct function to =words= in the =#.analysis= namespace.
 
 #+BEGIN_EXAMPLE
       ⎕vr '#.analysis.words'
@@ -2569,25 +2539,52 @@ as the separator. Let us now assign this direct function to =words= in the =#.an
       ∇
 #+END_EXAMPLE
 
-And we should get the same result by applying the new function =words= on thes second line.
+We now try this to see that it behaves as expected
 
 #+BEGIN_EXAMPLE
-     #.analysis.words 2⊃ #.analysis.lines contents
+       #.analysis.words 2⊃ #.analysis.lines contents 
 ┌→──────────────────┬───────────┬────┬────┬────┬────┬────┬────┬────┬────┬────┬────┬────┬────┐
-│                   │Moderaterna│1918│2678│3860│5197│4978│4364│5831│5782│5901│3822│7326│8397│
-│0114 Upplands Väsby│           │    │    │    │    │    │    │    │    │    │    │    │    │
+│0114 Upplands Väsby│Moderaterna│1918│2678│3860│5197│4978│4364│5831│5782│5901│3822│7326│8397│
 └──────────────────→┴──────────→┴───→┴───→┴───→┴───→┴───→┴───→┴───→┴───→┴───→┴───→┴───→┴───→┘
+      ≢ #.analysis.words 2⊃ #.analysis.lines contents 
+14
 #+END_EXAMPLE
 
+As we can see, we get a 14 element array from splitting a line into words, based on comma ','
+as the separator. But before we move on, we have to refactor! There is clearly duplication 
+in the =lines= and =words= function. Let us define a split function which takes the split-element
+as the left argument, and the text array as the right argument.
+
+#+BEGIN_EXAMPLE
+     ⎕vr '#.analysis.split'
+     ∇ split←{t←⍺,⍵ ⋄ 1↓¨(t=⍺)⊂t}
+     ∇
+#+END_EXAMPLE
+
+and now we can write lines and words more concisely as
+
+#+BEGIN_EXAMPLE
+[0]      lines ← { (⎕UCS 10) split ⍵ }
+
+[0]      words←{ ',' split ⍵ }
+#+END_EXAMPLE
+
+And we should get the same result as before
+
+#+BEGIN_EXAMPLE
+      #.analysis.words 2⊃ #.analysis.lines contents
+┌→──────────────────┬───────────┬────┬────┬────┬────┬────┬────┬────┬────┬────┬────┬────┬────┐
+│0114 Upplands Väsby│Moderaterna│1918│2678│3860│5197│4978│4364│5831│5782│5901│3822│7326│8397│
+└──────────────────→┴──────────→┴───→┴───→┴───→┴───→┴───→┴───→┴───→┴───→┴───→┴───→┴───→┴───→┘
+#+END_EXAMPLE
 
 But this is not really enough, we need to convert vote amounts into integers from text
 arrays which they are now. We can actually see how different things are represented
 internally in Dyalog APL by using 'data representation' =⎕DR=, let us observe the results
-for a floating points number, an integer, an integer array and an integer matrix.
-
-------------------------------------------------------------
-TODO: Describe that ⎕DR is to be interpreted as two digits.
-      First is the amount of bits, and second is the type.
+for a floating point number, an integer, an integer array and an integer matrix.
+Data Representation is quite interesting an you are recommended to read the help page
+for =Data Representation (Monadic)= which details the different return values and their
+meaning. 83 means an 8 bit signed integer and 80 means an 8 bit character.
 
 
 #+BEGIN_EXAMPLE
