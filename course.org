@@ -2690,7 +2690,7 @@ need to  drop the first two, which can be done with dyadic 'drop' =↓=, and the
 with =⎕vfi=.
 
 #+BEGIN_EXAMPLE
-     types {(2↑⍵),(2⊃¨⎕vfi¨2↓⍵)} #.analysis.words 2⊃ #.analysis.lines contents
+     types {(2↑⍵),(⊃,/2⊃¨⎕vfi¨2↓⍵)} #.analysis.words 2⊃ #.analysis.lines contents
 ┌→──────────────────┬───────────┬────┬────┬────┬────┬────┬────┬────┬────┬────┬────┬────┬────┐
 ↓                   │Moderaterna│1918│2678│3860│5197│4978│4364│5831│5782│5901│3822│7326│8397│
 │0114 Upplands Väsby│           │    │    │    │    │    │    │    │    │    │    │    │    │
@@ -2700,13 +2700,13 @@ with =⎕vfi=.
 #+END_EXAMPLE
 
 The code 163 stands for '16 bit signed integer' if you read the =⎕DR= manual pages for Dyalog APL.
-Therefore, the added dynamic function ={(2↑⍵),(2⊃∘⎕vfi¨2↓⍵)}= fixes each number and takes the
+Therefore, the added dynamic function ={(2↑⍵),(⊃,/2⊃∘⎕vfi¨2↓⍵)}= fixes each number and takes the
 leading two parts of the array as well.
 Let us store it into the =#.analysis= namespace as 'parse'.
 
 #+BEGIN_EXAMPLE
      ⎕vr '#.analysis.parse'
-     ∇ parse←{(2↑⍵),(2⊃∘⎕vfi¨2↓⍵)}
+     ∇ parse←{(2↑⍵),(⊃,/2⊃∘⎕vfi¨2↓⍵)}
      ∇
 #+END_EXAMPLE
 
@@ -2826,7 +2826,7 @@ it looks like this.
     
     split←{t←⍺,⍵ ⋄ 1↓¨(t=⍺)⊂t}
     
-    parse←{(2↑⍵),(2⊃∘⎕vfi¨2↓⍵)}
+    parse←{(2↑⍵),(⊃,/2⊃∘⎕vfi¨2↓⍵)}
 
     to_table←{ ↑ parse∘words ¨ lines ⍵ }
 
@@ -2872,49 +2872,42 @@ Sverigedemokraterna
 *** How do we target one specific municipality?
 
 I grew up in a small municipality called Svalöv, we can find all rows which 
-has Svalöv data by utilizig replicate =/= and substring match of the text
-'Svalöv'. For this we will use the dyadic function 'find' (underscore
-epsilon)  =⍷= which returns a binary array indicating where the occurrences
-are in the right argument of the left argument.
-See the following example below
+has Svalöv data by matching against the name as the last part of the first 
+cell on every row. Notice how the first element in every row is a numeric code
+of the municipality, together with the name.
 
 #+BEGIN_EXAMPLE
-     'tea' ⍷ 'teatralictea'
-1 0 0 0 0 0 0 0 0 1 0 0
+      table [1;1]
+┌───────────────────┐
+│0114 Upplands Väsby│
+└──────────────────→┘
 #+END_EXAMPLE
 
-With find =⍷= we will be able to generate the indices of the rows for
-which the first column contains 'Svalöv'. I will first present the
-expression and then break it down for you.
+
+We will utilize replicate =/= and substring matching with =≡= of the text 'Svalöv'.
+I will first present the expression and then break it down for you.
 
 #+BEGIN_EXAMPLE
-       ({ ∨/ 'Svalöv' ⍷ ⍵ } ¨ table[;1])/⍳⊃⍴table
+       ( {'Svalöv'≡¯6↑⍵} ¨ table[;1] ) / ⍳≢table
 761 762 763 764 765 766 767 768
 #+END_EXAMPLE
 
 At the right side of replicate =/= we have 
 
-:   ⍳⊃⍴table 
+:   ⍳≡table 
 
-(the indices of each row). This is done by using shape =⍴= which 
-returns the dimensions of the table, then selecting the first 
-number of that array (with pick ⊃) and then generating all numbers 
-from 1 to that number.
-
+(the indices of each row). This is done by using tally (returns the size of the 
+leading dimension) and then geneare all numbers from 1 to the magnitude. 
 On the left side of replicate =/= we have 
 
-:   ({ ∨/ 'Svalöv' ⍷ ⍵ } ¨ table[;1])
+:   ( {'Svalöv'≡¯6↑⍵} ¨ table[;1] )
 
-(match rows containing 'Svalöv'). This is done by selecting all the
-first columns from all rows in table, and then, for each element,
-performing an each with a direct function in which we search for
-'Svalöv' and do an or-reduction on the resulting binary array.
-The or reduction is necessary to produce a single binary value
-for each find result against each row.
+Here, for each first element on each row, we pick the last 6 characters of the 
+text array and match against the name 'Svalöv'. This will generate a long binary
+array of 1's and 0's. 
 
-Replicate works both like a function for removing elements from
-arrays, and as a function to duplicate elements. Look at the 
-following examples
+Replicate works both like a function for removing elements from arrays, 
+and as a function to duplicate elements. Look at the following examples
 
 #+BEGIN_EXAMPLE
      0 1 1 0 1 0 0 0 0 / 'teatralic'
@@ -2932,7 +2925,7 @@ for which 'Svalöv' is part of the name, we can take these row
 indices and select all columns with it.
 
 #+BEGIN_EXAMPLE
-      rows ←  ({ ∨/ 'Svalöv' ⍷ ⍵ } ¨ table[;1])/⍳⊃⍴table
+      rows ← ( {'Svalöv'≡¯6↑⍵} ¨ table[;1] ) / ⍳≢table
       rows
 761 762 763 764 765 766 767 768
       table[rows;]
@@ -2982,45 +2975,22 @@ parties and their votes, this is done with dyadic drop along the second dimensio
 *** Which are the most popular parties in Svalöv?
 
 One way of knowing this is to rank the parties every year, and display 
-the ranked list. Let's start by assining the current result to votes
+the ranked list. Let's start by assigning the current result to votes
 
 :    votes ← 1↓[2] table[rows;]
 
-Next we calculate the percentage of the votes for every party as they
-are in the first column, by summing the total votes and doing division
-with the sum; let us start with the first year (1973).
-
-
-------------------------------------------------------------
-TODO: Calculating the percentage will not change the order between 
-      the votes.
-TODO: All divide by votes are unnecessary.
-
+We can now get the relative ordering of each party by comparing the total
+amount of votes and reordering the party names based on grade down,
+let us start with the first year (1973).
 
 #+BEGIN_EXAMPLE
       votes[;2]
 884 3112 422 55 0 3412 119 0
 
-      +/votes[;2]
-8004
-
-      votes[;2]÷+/votes[;2]
-0.1104447776 0.3888055972 0.05272363818 0.006871564218 0 0.4262868566 0.01486756622 0
-#+END_EXAMPLE
-
-Next, we wish to see the indices of the sorted result, in descending order, remember
-that we use grade down for that =⍒=.
-
-#+BEGIN_EXAMPLE
-      ⍒ votes[;2]÷+/votes[;2]
+      ⍒ votes[;2]
 6 2 1 3 7 4 5 8
-#+END_EXAMPLE
 
-If we now want the names in this order, we index the first column for all rows
-with these indices, and do mix =↑= to get a nice readable table.
-
-#+BEGIN_EXAMPLE
-      ↑votes[;1][⍒ votes[;2]÷+/votes[;2]]
+      ↑ votes[⍒ votes[;2];1]
 Socialdemokraterna
 Centerpartiet
 Moderaterna
@@ -3035,17 +3005,17 @@ Next, let us do this for each year, that means, all the remaining columns 3..13 
 We can do this with each =¨= and a direct function.
 
 #+BEGIN_EXAMPLE
-      { ↑votes[;1][⍒ votes[;⍵]÷+/votes[;⍵]] } ¨ 2+⍳11
+      { ↑ votes[⍒votes[;⍵];1] } ¨ 2+⍳11
 #+END_EXAMPLE
 
 This result will crowd the screen, and perhaps we really only care for the top 3 parties,
-which we do by take:ing =↑= the first 3 indices from grade down.
+which we do by taking =↑= the first 3 indices from grade down.
 If we shape =⍴= this result into a 3 by 4 matrix, we will be able to read it easier,
 but beware! The last element of the matrix (bottom right corner) will be a duplicate of
 the first element! 
 
 #+BEGIN_EXAMPLE
-     3 4 ⍴ { ↑votes[;1][ 3 ↑ ⍒ votes[;⍵]÷+/votes[;⍵]] } ¨ 2+⍳11
+     3 4 ⍴ { ↑ 3 ↑ votes[⍒votes[;⍵];1] } ¨ 2+⍳11
 ┌→─────────────────┬──────────────────┬───────────────────┬──────────────────┐
 ↓Socialdemokraterna│Socialdemokraterna│Socialdemokraterna │Socialdemokraterna│
 │Centerpartiet     │Centerpartiet     │Centerpartiet      │Moderaterna       │
