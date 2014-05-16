@@ -2617,8 +2617,10 @@ line. As we wish to explore our way into the correct result, we will try to find
 in the Dyalog APL environment before we encode it into the =#.analysis= namespace.
 
 So, the first question is: How do we turn a text array into the number it represents?
-The answer is luckily very simple, we use the built in monadic 'execute' =⍎= which interprets
-the text array passed as the right argument as a Dyalog APL statement.
+There are two ways, one is extremely unsafe but lightweight, and the other is the correct
+way which will not leave gaping security holes in your application. The first and incorrect
+way is to use monadic 'execute' =⍎= (up tack jot). =⍎= will interpret any passed text array
+as the right argument as a Dyalog APL statement and execute them.
 Observe the following examples
 
 #+BEGIN_EXAMPLE
@@ -2632,21 +2634,38 @@ Observe the following examples
 6 7 8 9 10
 #+END_EXAMPLE
 
+The danger of using =⍎= is that someone could insert malicious code where you expect
+numbers to be, and the application would end up giving the hacker control of your system.
+Instead, we wish to use 'Verify and Fix input' =⎕VFI=. =⎕VFI= will not allow execution
+of malicious code, insted it only focuses on numeric parsing and returns a two element
+array of success/failure indications and the numeric results.
+Observe the following examples
+
+#+BEGIN_EXAMPLE
+      ⎕vfi '2 0.5 a'
+┌→────┬───────┐
+│1 1 0│2 0.5 0│
+└~───→┴~─────→┘
+
+      ⎕vfi '¯1 -1 1'
+┌→────┬──────┐
+│1 0 1│¯1 0 1│
+└~───→┴~────→┘
+#+END_EXAMPLE
+
+The first array is a boolean array of denoting success or failure to parse the input
+into a number for each position in the right input argument array.
 We can see that the data representation =⎕DR= of the result is coherent with what
 we have seen before for integers, arrays and matrices.
 
 #+BEGIN_EXAMPLE
-     ⎕dr ⍎ '10'
-83
-     ⎕dr ⍎ '⍳10'
-83
-     ⎕dr ⍎ '2 5 ⍴ ⍳10'
+      ⎕dr 2 ⊃ ⎕vfi '10'
 83
 #+END_EXAMPLE
 
-Back to the task at hand armed with execute =⍎=, we wish to execute all but the first
+Back to the task at hand armed with execute =⎕vfi=, we wish to fix all but the first
 two elements of the line. So, what if we take the first two elements, and catenate this
-with the result of executing every element of the remaining array?
+with the result of fixing every element of the remaining array?
 Let us also contrast this against a listing of the types of the original untouched elements
 we get from applying =words=.
 
@@ -2660,12 +2679,18 @@ we get from applying =words=.
 └~──────────────────┴~──────────┴~───┴~───┴~───┴~───┴~───┴~───┴~───┴~───┴~───┴~───┴~───┴~───┘
 #+END_EXAMPLE
 
-Okay, so taking the first 2 elements, we can do that with dyadic 'take' =↑=, then we also 
-need to  drop the first two, which can be done with dyadic 'drop' =↓=, and then we execute
-the rest with =⍎=.
+Let's make it simpler for ourselfes by assigning the dynamic function to a variable.
 
 #+BEGIN_EXAMPLE
-     {⍵,[0.5]⎕dr ¨⍵} {(2↑⍵),(⍎¨2↓⍵)}  #.analysis.words 2⊃ #.analysis.lines contents
+      types←{⍵,[0.5]⎕dr¨⍵}
+#+END_EXAMPLE
+
+Okay, so taking the first 2 elements, we can do that with dyadic 'take' =↑=, then we also 
+need to  drop the first two, which can be done with dyadic 'drop' =↓=, and then fix the rest
+with =⎕vfi=.
+
+#+BEGIN_EXAMPLE
+     types {(2↑⍵),(2⊃¨⎕vfi¨2↓⍵)} #.analysis.words 2⊃ #.analysis.lines contents
 ┌→──────────────────┬───────────┬────┬────┬────┬────┬────┬────┬────┬────┬────┬────┬────┬────┐
 ↓                   │Moderaterna│1918│2678│3860│5197│4978│4364│5831│5782│5901│3822│7326│8397│
 │0114 Upplands Väsby│           │    │    │    │    │    │    │    │    │    │    │    │    │
@@ -2675,19 +2700,20 @@ the rest with =⍎=.
 #+END_EXAMPLE
 
 The code 163 stands for '16 bit signed integer' if you read the =⎕DR= manual pages for Dyalog APL.
-Therefore, the added direct function ={(2↑⍵),(⍎¨2↓⍵)}= is most likely correct.
+Therefore, the added dynamic function ={(2↑⍵),(2⊃∘⎕vfi¨2↓⍵)}= fixes each number and takes the
+leading two parts of the array as well.
 Let us store it into the =#.analysis= namespace as 'parse'.
 
 #+BEGIN_EXAMPLE
      ⎕vr '#.analysis.parse'
-     ∇ parse←{(2↑⍵),(⍎¨2↓⍵)}
+     ∇ parse←{(2↑⍵),(2⊃∘⎕vfi¨2↓⍵)}
      ∇
 #+END_EXAMPLE
 
 A sanity check that this works as expected is never wrong
 
 #+BEGIN_EXAMPLE
-     {⍵,[0.5]⎕dr ¨⍵} #.analysis.parse #.analysis.words 2⊃ #.analysis.lines contents
+     types #.analysis.parse #.analysis.words 2⊃ #.analysis.lines contents
 ┌→──────────────────┬───────────┬────┬────┬────┬────┬────┬────┬────┬────┬────┬────┬────┬────┐
 ↓                   │Moderaterna│1918│2678│3860│5197│4978│4364│5831│5782│5901│3822│7326│8397│
 │0114 Upplands Väsby│           │    │    │    │    │    │    │    │    │    │    │    │    │
@@ -2723,143 +2749,35 @@ typing the same namespace name over and over again.
 #.analysis
 #+END_EXAMPLE
 
-Remember that 'change space' =⎕cs=  used to change the current namespace, and that
+Remember that 'change space' =⎕cs= is used to change the current namespace, and that
 =⎕this= is used to retrieve the name of the current namespace. When in the =#.analysis=
 namespace, we can access the functions immediately without having to prefix them with 
-the names.
+the names, however, we must now reference the contents variable from within the root
+namespace with =#.contents=.
 
 #+BEGIN_EXAMPLE
-     parse∘words 2⊃ lines #.contents
-┌→──────────────────┬───────────┬────┬────┬────┬────┬────┬────┬────┬────┬────┬────┬────┬────┐
-│                   │Moderaterna│1918│2678│3860│5197│4978│4364│5831│5782│5901│3822│7326│8397│
-│0114 Upplands Väsby│           │    │    │    │    │    │    │    │    │    │    │    │    │
-└──────────────────→┴──────────→┴~───┴~───┴~───┴~───┴~───┴~───┴~───┴~───┴~───┴~───┴~───┴~───┘
+      parse∘words 2⊃ lines #.contents
+┌→──────────────────┬───────────┬────┬────┬────┬────┬────┬────┬────┬
+│0114 Upplands Väsby│Moderaterna│1918│2678│3860│5197│4978│4364│5831│
+└──────────────────→┴──────────→┴~───┴~───┴~───┴~───┴~───┴~───┴~───┴
 #+END_EXAMPLE
 
 We would next want to perform =parse∘words= on every result from lines of #.contents.
-Why did I change =contents= to =#.contents= all of a sudden? Well, because we moved
-into the =#.analysis= namespace, from the root namespace =#=, and the =contents= variable
-was created in the root namespace =#=.
 What we would like to do is the following
 
 :      ⍴ ↑ parse∘words ¨ lines #.contents
 
-But, doing this exposes an error (or as I like so say; an interesting situation).
-
-
-------------------------------------------------------------
-TODO: Switch to ⎕VFI (Verify and Fix input) 
-TODO: Explain the vulnerability issues with ⍎ in general.
-
-
-#+BEGIN_EXAMPLE
-     ⍴ ↑ parse∘words ¨ lines #.contents
-⍎SYNTAX ERROR
-parse[0] ..
-#+END_EXAMPLE
-
-The way to interpet this error, is that execute =⍎= hit a syntax error when trying to execute
-the passed text array containing =..=, in the function parse, on line zero (0). 
-Because we have the ability to quickly look at the source of a
-direct function via vector representation =⎕vr=, we do so.
-
-:      ⎕vr 'parse'
-:      ∇ parse←{(2↑⍵),(⍎¨2↓⍵)}
-:      ∇
-
-
-Right, so we see =..= somewhere in the number series then. A quick grep in the linux
-environment for ',..' should give us a hint of what this looks like.
-
-#+BEGIN_EXAMPLE
-> grep ',\.\.' ME0104B6.csv | more
-0126 Huddinge,Sverigedemokraterna,..,..,..,..,..,..,..,..,368,764,1297,2569
-0127 Botkyrka,Kristdemokraterna,232,242,282,398,..,592,1793,1072,3243,3327,2537,2110
-#+END_EXAMPLE
-
-All right, so when there is no data for a specific party during a specific year, the
-result is '..' instead of zero. In our case, it would be better if these '..' where to
-be encoded as zeroes. So, what we want to, is to convert =..= into zero, or execute
-whatever it is; this merits its own name, something like =parse_votes=.
-But first, I will introduce you to direct function guards.
-
-Guards are expressions wich allow you to control the flow of the execution within 
-the direct function, they are expressed as boolean expressions ending with a colon ':'.
-Some simple examples will elucidate this for you.
-
-First a simple guard testing if the right argument is 1.
-#+BEGIN_EXAMPLE
-      { ⍵=1:'equal to one' ⋄ 'not equal to one'} ¨ 1 0 0 1
-┌→───────────┬────────────────┬────────────────┬────────────┐
-│equal to one│not equal to one│not equal to one│equal to one│
-└───────────→┴───────────────→┴───────────────→┴───────────→┘
-#+END_EXAMPLE
-
-Now with two guards, the first guard is a compound expression with the connective 'and' ∧,
-
-and the second guard tests for membership in an array.
-
-:      { (⍵≤4) ∧ (⍵ ≥ 1):'1-4' ⋄ ⍵∊(5 6 7 8):'5-8' ⋄ ⍵ } ¨ ¯2+⍳12
-: ┌→─┬─┬───┬───┬───┬───┬───┬───┬───┬───┬─┬──┐
-: │¯1│0│1-4│1-4│1-4│1-4│5-8│5-8│5-8│5-8│9│10│
-: └~─┴─┴──→┴──→┴──→┴──→┴──→┴──→┴──→┴──→┴─┴~─┘
-
-The final example shows that a guard can access a variable which has been assigned
-to in the beginning of the direct function.
-
-#+BEGIN_EXAMPLE
-      { (f s)←⍵ ⋄ f>s:'first!' ⋄ f<s:'second!' ⋄ 'equal!' } ¨ (1 2) (2 1) (1 1)
-┌→──────┬──────┬──────┐
-│second!│first!│equal!│
-└──────→┴─────→┴─────→┘
-#+END_EXAMPLE
-
-Let us now use the guard to test the possible number for equality with =..= and
-if so, return it as zero (0). Otherwise we execute it.
-
-#+BEGIN_EXAMPLE
-       { ⍵≡'..': 0 ⋄ ⍎ ⍵ } '12'
-12
-       { ⍵≡'..': 0 ⋄ ⍎ ⍵ } '..'
-0
-#+END_EXAMPLE
-
-Let us put this as =parse_votes= in our =#.analysis= namespace, and change so that
-the parse function uses =parse_votes= on each of the possible votes instead of just
-execute =⍎=.
-
-#+BEGIN_EXAMPLE
-     ⎕vr 'parse_votes'
-     ∇ parse_votes←{⍵≡'..':0 ⋄ ⍎⍵}
-     ∇
-     
-     ⎕vr 'parse'
-     ∇ parse←{(2↑⍵),(parse_votes¨2↓⍵)}
-     ∇
-#+END_EXAMPLE
-
-We can now try to re-run the same function that failed before 
-
-#+BEGIN_EXAMPLE
-      ⍴ parse∘words ¨ lines #.contents
-2329
-#+END_EXAMPLE
-
-Voila, we get 2329 results, each array of the 2329 arrays is an internal 
-data array of length 14.
-
-#+BEGIN_EXAMPLE
-      ⍴ 2 ⊃ parse∘words ¨ lines #.contents
-14
-#+END_EXAMPLE
-
-We can thus mix this result into a 2329 by 14 matrix and assign this to a
-variable which we call =tab= for table.
+So, let us do it!
 
 #+BEGIN_EXAMPLE
       ⍴ ↑ parse∘words ¨ lines #.contents
-2329 14
+2330 14
+#+END_EXAMPLE
 
+Voila, we get 2330 results, each array of the 2330 arrays is an internal data array 
+of length 14. We can assign this to a variable which we call =tab= for table.
+
+#+BEGIN_EXAMPLE
       tab ← ↑ parse∘words ¨ lines #.contents
       tab[2 3 4;]
 ┌→──────────────────┬─────────────┬────┬────┬────┬────┬────┬────┬────┬────┬────┬────┬────┬────┐
@@ -2871,7 +2789,7 @@ variable which we call =tab= for table.
 └──────────────────→┴────────────→┴~───┴~───┴~───┴~───┴~───┴~───┴~───┴~───┴~───┴~───┴~───┴~───┘
 #+END_EXAMPLE
 
-We thus define the last direct function for parsing this to a table 
+We thus define the last dynamic function for parsing this to a table 
 in the =#.analysis= namespace.
 
 #+BEGIN_EXAMPLE
@@ -2880,17 +2798,40 @@ in the =#.analysis= namespace.
      ∇
 #+END_EXAMPLE
 
-and the final check that this is working as expected (2329 rows and 14 columns)
+and the final check that this is working as expected (2330 rows and 14 columns)
 
 #+BEGIN_EXAMPLE
       ⍴ to_table read_file './ME0104B6.csv'
-2329 14
+2330 14
 #+END_EXAMPLE
 
+** analysis.dyalog code listing
 
-------------------------------------------------------------
-TODO: Do I really need to ⎕vr all the functions or just enough
-      to show the definition?
+If we now look at the analysis.dyalog SALT script outside of the Dyalog APL environment,
+it looks like this.
+
+#+BEGIN_EXAMPLE
+:Namespace analysis
+    ⎕IO ⎕ML ⎕WX←1 1 3
+
+    ∇ Z←read_file path;tie
+      tie←path ⎕NTIE 0
+      Z←⎕NREAD tie 80(⎕NSIZE tie)0
+      ⎕NUNTIE tie
+    ∇
+    
+    lines ← { (⎕UCS 10) split ⍵ } 
+
+    words← { ',' split ⍵ }
+    
+    split←{t←⍺,⍵ ⋄ 1↓¨(t=⍺)⊂t}
+    
+    parse←{(2↑⍵),(2⊃∘⎕vfi¨2↓⍵)}
+
+    to_table←{ ↑ parse∘words ¨ lines ⍵ }
+
+:EndNamespace 
+#+END_EXAMPLE
 
 ** Analysis of table data
 
