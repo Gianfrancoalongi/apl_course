@@ -2176,10 +2176,6 @@ It contains 2329 lines of data on 8 swedish parties and how different
 swedish municipalities voted on these parties through the years 1973,1976,
 1979,1982,1985,1988,1991,1994,1998,2002,2006,2010.
 
-
-------------------------------------------------------------
-TODO: Use KEY for this (⎕UCS 9016) ⌸ <------
-
 ** Create the SALT Script from within the Dyalog APL environment
 In the Chapter 'A Tiny Booking DSL', we created the SALT script from outside
 the Dyalog APL environment and then loaded it using =⎕SE.SALT.Load=.
@@ -2436,8 +2432,6 @@ recreate any character based on it's numeric code, and thus, we can match
 all carriage returns with (⎕UCS 10), allowing us to count the amount of
 newlines in the file.
 
---------------------------------------------------------------------
-TODO: Reuse the split function from chapter 2 to use here and split.
 
 #+BEGIN_EXAMPLE
       +/ contents = ⎕UCS 10
@@ -2834,10 +2828,6 @@ it looks like this.
 #+END_EXAMPLE
 
 ** Analysis of table data
-
-------------------------------------------------------------
-TODO: ⍳ ≢ and not ⍳⊃⍴ 
-
 
 We now have a reliable and fast way of parsing the voting data into a
 table, which will allow us to perform queries and analyze the vote
