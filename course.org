@@ -3051,7 +3051,6 @@ most popular parties are =Socialdemokraterna=, =Moderaterna= and =Centerpartiet=
 
 
 
-
 * Small puzzles and challenges
 
 Practicing small puzzles and challenges with Dyalog APL is a good way of mastering the 
@@ -3113,3 +3112,32 @@ and we can tag on the original numbers as the first column
 
 
 
+** Zipping two arrays
+
+A common function in functional programming languages, is the zip function that generates
+a list of pairs from two lists. Each pair containing elements from each list at the same
+index position. How would you do this in APL? We want to achieve this
+
+#+BEGIN_EXAMPLE
+┌→───┬────┬────┬────┬────┐
+│1 ¯1│2 ¯2│3 ¯3│4 ¯4│5 ¯5│
+└~──→┴~──→┴~──→┴~──→┴~──→┘
+#+END_EXAMPLE
+
+from 
+
+#+BEGIN_EXAMPLE
+      ⍳5
+1 2 3 4 5
+      -⍳5
+¯1 ¯2 ¯3 ¯4 ¯5
+#+END_EXAMPLE
+
+the answer is
+
+#+BEGIN_EXAMPLE
+     (⍳5) ,¨ -⍳5
+┌→───┬────┬────┬────┬────┐
+│1 ¯1│2 ¯2│3 ¯3│4 ¯4│5 ¯5│
+└~──→┴~──→┴~──→┴~──→┴~──→┘
+#+END_EXAMPLE
